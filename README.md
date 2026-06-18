@@ -29,7 +29,7 @@ Authors host a `whostyle.json` file on their own domain. The structure strictly 
 ```json
 {
   "whostyle": {
-    "version": "1.1",
+    "version": "1.0",
     "typography": "monospace",
     "text_transform": "none",
     "text_align": "left",
@@ -113,8 +113,26 @@ WhostyleEngine.apply(commentElement, rawJson, 'dark');
 │   │   └── WhostyleProcessor.php           <- Native PHP processing class
 │   └── js/
 │       └── whostyle.js                     <- ESM/JavaScript Modern runtime engine
+├── tests/
+│   ├── verify_processor.php                <- PHP validation script
+│   └── verify_engine.js                    <- JS validation script
 └── README.md                               <- This documentation file
+```
 
+## Running the Tests
+
+To verify the compliance, safety, and correctness of both reference implementations (including type checks and WCAG contrast validation), you can run the test suite:
+
+### PHP Implementation
+Run the PHP verification script:
+```bash
+php tests/verify_processor.php
+```
+
+### JavaScript Implementation
+Run the JS verification script (requires Node.js):
+```bash
+node tests/verify_engine.js
 ```
 
 ## Contributing and Governance

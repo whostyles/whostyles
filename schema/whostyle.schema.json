@@ -1,0 +1,157 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Whostyle",
+    "type": "object",
+    "required": [
+        "whostyle"
+    ],
+    "properties": {
+        "whostyle": {
+            "type": "object",
+            "required": [
+                "version",
+                "typography",
+                "theme"
+            ],
+            "properties": {
+                "version": {
+                    "type": "string",
+                    "const": "1.0"
+                },
+                "typography": {
+                    "type": "string",
+                    "enum": [
+                        "sans-serif",
+                        "serif",
+                        "monospace",
+                        "cursive",
+                        "fantasy",
+                        "system-ui"
+                    ]
+                },
+                "text_transform": {
+                    "type": "string",
+                    "enum": [
+                        "none",
+                        "capitalize",
+                        "uppercase",
+                        "lowercase"
+                    ]
+                },
+                "text_align": {
+                    "type": "string",
+                    "enum": [
+                        "left",
+                        "right",
+                        "center",
+                        "justify"
+                    ]
+                },
+                "list_style_type": {
+                    "type": "string",
+                    "enum": [
+                        "disc",
+                        "circle",
+                        "square",
+                        "decimal",
+                        "lower-roman"
+                    ]
+                },
+                "border_style": {
+                    "type": "string",
+                    "enum": [
+                        "none",
+                        "hidden",
+                        "dotted",
+                        "dashed",
+                        "solid",
+                        "double",
+                        "groove",
+                        "ridge",
+                        "inset",
+                        "outset"
+                    ]
+                },
+                "border_width": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4
+                },
+                "border_radius": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16
+                },
+                "shadow_offset": {
+                    "type": "integer",
+                    "minimum": -4,
+                    "maximum": 4
+                },
+                "shadow_blur": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 8
+                },
+                "letter_spacing": {
+                    "type": "number",
+                    "minimum": -0.5,
+                    "maximum": 2.0
+                },
+                "theme": {
+                    "type": "object",
+                    "anyOf": [
+                        {
+                            "required": [
+                                "light"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "dark"
+                            ]
+                        }
+                    ],
+                    "properties": {
+                        "light": {
+                            "$ref": "#/$defs/themeBlock"
+                        },
+                        "dark": {
+                            "$ref": "#/$defs/themeBlock"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "$defs": {
+        "themeBlock": {
+            "type": "object",
+            "required": [
+                "background",
+                "text"
+            ],
+            "properties": {
+                "background": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                },
+                "text": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                },
+                "border_color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                },
+                "link_color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                },
+                "link_hover_color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                }
+            }
+        }
+    }
+}

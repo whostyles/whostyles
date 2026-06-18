@@ -1,0 +1,12 @@
+{
+  "name": "whostyles",
+  "version": "1.0.0",
+  "description": "Syndicated typographic and cosmetic styling format for decentralized web platforms",
+  "type": "module",
+  "scripts": {
+    "test:php": "php tests/verify_processor.php",
+    "test:js": "node tests/verify_engine.js",
+    "test": "npm run test:php && npm run test:js"
+  },
+  "license": "MIT"
+}
