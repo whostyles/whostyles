@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whostyle Validator (v1.1)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.12.0/ajv2020.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            font-size: 2.5rem;
+            background: -webkit-linear-gradient(#60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            width: 90%;
+            max-width: 1400px;
+            padding-bottom: 3rem;
+        }
+
+        .panel {
+            flex: 1;
+            min-width: 350px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h2 {
+            font-family: 'Outfit', sans-serif;
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 300px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: #10b981;
+            font-family: 'monospace';
+            font-size: 0.95rem;
+            outline: none;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        #result {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        #result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: #fca5a5;
+            display: block;
+        }
+
+        #result.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: #6ee7b7;
+            display: block;
+        }
+
+        .error-list {
+            margin: 0.5rem 0 0 1rem;
+            padding: 0;
+        }
+
+        /* Previews */
+        .preview-container {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .preview-container.active {
+            display: flex;
+        }
+
+        .comment-mock {
+            padding: 1.5rem;
+            border-radius: var(--ws-bradius, 0px);
+            border-style: var(--ws-bstyle, none);
+            border-width: var(--ws-bwidth, 0px);
+            font-family: var(--ws-font, sans-serif);
+            text-transform: var(--ws-transform, none);
+            text-align: var(--ws-align, left);
+            letter-spacing: var(--ws-lspacing, 0px);
+            box-shadow: var(--ws-soffset, 0px) var(--ws-soffset, 0px) var(--ws-sblur, 0px) rgba(0,0,0,0.15);
+            background-color: var(--ws-bg, #1e293b);
+            color: var(--ws-text, #f8fafc);
+            border-color: var(--ws-bcolor, transparent);
+            transition: all 0.3s ease;
+        }
+
+        .comment-mock a {
+            color: var(--ws-link, #60a5fa);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .comment-mock a:hover {
+            color: var(--ws-lhover, #93c5fd);
+        }
+
+        .comment-mock ul {
+            list-style-type: var(--ws-list, disc);
+            padding-left: 2rem;
+        }
+
+        .comment-meta {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Whostyle Validator</h1>
+        <p>Paste your JSON or inline &lt;script&gt; below to validate against the official schema.</p>
+    </header>
+
+    <div class="container">
+        <!-- Input Panel -->
+        <div class="panel">
+            <h2>Input Data</h2>
+            <textarea id="json_input" placeholder="Paste your whostyle.json or <script type='application/whostyle+json'> block here..."></textarea>
+            <button class="btn" id="btn_validate">Validate Payload</button>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <h2>Validation Results</h2>
+            <div id="result">Waiting for input...</div>
+
+            <div class="preview-container" id="preview_container">
+                <h3>Live Engine Rendering</h3>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0;">This preview uses the actual <code>whostyle.js</code> engine to render your identity, including bounds clamping and accessibility fallbacks.</p>
+                
+                <div class="comment-mock" id="mock_light">
+                    <div class="comment-meta"><strong>Alice</strong> replied on example.com (Light Theme)</div>
+                    <div>
+                        Testing my new decentralized identity.
+                        Check out my <a href="#">personal website</a> for more.
+                        <ul>
+                            <li>Validation</li>
+                            <li>Schema</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="comment-mock" id="mock_dark">
+                    <div class="comment-meta"><strong>Bob</strong> replied on anothersite.net (Dark Theme)</div>
+                    <div>
+                        Testing dark mode fallback.
+                        Read the <a href="#">specification</a>.
+                        <ul>
+                            <li>Accessibility</li>
+                            <li>Security</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { WhostyleEngine } from '../src/js/whostyle.js';
+
+        let ajv = null;
+        let validateSchema = null;
+
+        async function initValidator() {
+            try {
+                // Initialize AJV 2020-12
+                ajv = new window.ajv2020();
+                
+                // Fetch the schema
+                const response = await fetch('../schema/whostyle.schema.json');
+                if (!response.ok) throw new Error('Could not load schema file.');
+                const schema = await response.json();
+                
+                validateSchema = ajv.compile(schema);
+            } catch (e) {
+                showResult(false, "Failed to initialize validator: " + e.message);
+            }
+        }
+
+        function showResult(isValid, message, errors = []) {
+            const res = document.getElementById('result');
+            const preview = document.getElementById('preview_container');
+            
+            res.className = isValid ? 'success' : 'error';
+            
+            let html = `<strong>${isValid ? '✅ Valid' : '❌ Invalid'}</strong>: ${message}`;
+            
+            if (errors.length > 0) {
+                html += '<ul class="error-list">';
+                errors.forEach(err => {
+                    const path = err.instancePath || 'root';
+                    html += `<li><code>${path}</code>: ${err.message}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            res.innerHTML = html;
+            
+            if (isValid) {
+                preview.classList.add('active');
+            } else {
+                preview.classList.remove('active');
+            }
+        }
+
+        document.getElementById('btn_validate').addEventListener('click', () => {
+            const input = document.getElementById('json_input').value.trim();
+            if (!input) {
+                showResult(false, "Input cannot be empty.");
+                return;
+            }
+
+            if (!validateSchema) {
+                showResult(false, "Validator is still initializing or failed to load schema.");
+                return;
+            }
+
+            let jsonText = input;
+
+            // Check if it's an inline script
+            if (input.toLowerCase().includes('<script')) {
+                const extracted = WhostyleEngine.discoverInline(input);
+                if (extracted) {
+                    jsonText = extracted;
+                } else {
+                    showResult(false, "Found script tags but could not extract valid JSON.");
+                    return;
+                }
+            }
+
+            // Attempt parse
+            let parsed;
+            try {
+                parsed = JSON.parse(jsonText);
+            } catch (e) {
+                showResult(false, "JSON Syntax Error: " + e.message);
+                return;
+            }
+
+            // Attempt Schema Validation
+            const valid = validateSchema(parsed);
+            if (!valid) {
+                showResult(false, "JSON violates schema rules:", validateSchema.errors);
+                return;
+            }
+
+            // Success, run engine
+            showResult(true, "JSON matches specification Draft 11 perfectly!");
+
+            const lightEl = document.getElementById('mock_light');
+            const darkEl = document.getElementById('mock_dark');
+
+            // Reset class lists
+            lightEl.className = 'comment-mock';
+            darkEl.className = 'comment-mock';
+
+            // Apply engine
+            WhostyleEngine.apply(lightEl, parsed, 'light');
+            WhostyleEngine.apply(darkEl, parsed, 'dark');
+
+            // Since WhostyleEngine will silently apply accessibility fallbacks,
+            // we can re-evaluate the contrast and notify the user.
+            const ws = parsed.whostyle;
+            let contrastWarn = false;
+            let contrastErrors = [];
+            ['light', 'dark'].forEach(mode => {
+                const theme = ws.theme[mode];
+                if (theme) {
+                    let ratio = WhostyleEngine.getContrastRatio(theme.background, theme.text);
+                    if (ratio < 4.5) {
+                        contrastErrors.push(`<code>text</code> (${theme.text}) vs <code>background</code> (${theme.background}) in ${mode} theme: <strong>${ratio.toFixed(2)}:1</strong> (requires 4.5:1)`);
+                        contrastWarn = true;
+                    }
+                    if (theme.link_color) {
+                        ratio = WhostyleEngine.getContrastRatio(theme.background, theme.link_color);
+                        if (ratio < 4.5) {
+                            contrastErrors.push(`<code>link_color</code> (${theme.link_color}) vs <code>background</code> (${theme.background}) in ${mode} theme: <strong>${ratio.toFixed(2)}:1</strong> (requires 4.5:1)`);
+                            contrastWarn = true;
+                        }
+                    }
+                    if (theme.link_hover_color) {
+                        ratio = WhostyleEngine.getContrastRatio(theme.background, theme.link_hover_color);
+                        if (ratio < 4.5) {
+                            contrastErrors.push(`<code>link_hover_color</code> (${theme.link_hover_color}) vs <code>background</code> (${theme.background}) in ${mode} theme: <strong>${ratio.toFixed(2)}:1</strong> (requires 4.5:1)`);
+                            contrastWarn = true;
+                        }
+                    }
+                }
+            });
+
+            if (contrastWarn) {
+                const res = document.getElementById('result');
+                let errHtml = `<ul style="margin: 0.5rem 0 0 1rem; padding: 0;">`;
+                contrastErrors.forEach(err => {
+                    errHtml += `<li style="margin-bottom: 0.3rem">${err}</li>`;
+                });
+                errHtml += `</ul>`;
+
+                res.innerHTML += `<div style="margin-top: 1rem; padding: 1rem; background: rgba(239, 68, 68, 0.2); border-radius: 4px; border: 1px solid #ef4444; color: #fca5a5; font-size: 0.95rem;">
+                    ⚠️ <strong>Accessibility Warning:</strong> The following color pairs do not meet the minimum WCAG contrast. The preview below reflects the engine's automatic fallback behavior.<br>
+                    ${errHtml}
+                </div>`;
+            }
+        });
+
+        // Initialize on load
+        initValidator();
+    </script>
+</body>
+</html>
