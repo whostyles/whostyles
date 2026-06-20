@@ -137,7 +137,8 @@
                 },
                 "text": {
                     "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+                    "description": "Must maintain a 4.5:1 minimum contrast ratio with the background color according to WCAG 2.1."
                 },
                 "border_color": {
                     "type": "string",
@@ -145,11 +146,13 @@
                 },
                 "link_color": {
                     "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+                    "description": "Must maintain a 4.5:1 minimum contrast ratio with the background color according to WCAG 2.1."
                 },
                 "link_hover_color": {
                     "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                    "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+                    "description": "Must maintain a 4.5:1 minimum contrast ratio with the background color according to WCAG 2.1."
                 }
             }
         }
