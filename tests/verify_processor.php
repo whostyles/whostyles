@@ -204,7 +204,13 @@ run_test("Discover URL in HTML", function() use ($processor) {
     $html = '<!DOCTYPE html><html><head><link rel="whostyle" type="application/json" href="https://example.com/whostyle.json"></head><body></body></html>';
     $url = $processor->discover_url($html);
     if ($url !== 'https://example.com/whostyle.json') {
-        throw new Exception("Failed to discover correct URL, got: " . $url);
+        throw new Exception("Failed to discover URL from HTML");
+    }
+
+    $html_inline = '<!DOCTYPE html><html><head><script type="application/whostyle+json">{"whostyle":{"version":"1.1"}}</script></head><body></body></html>';
+    $json = $processor->discover_inline($html_inline);
+    if ($json !== '{"whostyle":{"version":"1.1"}}') {
+        throw new Exception("Failed to discover inline JSON from HTML");
     }
 
     $invalid_html = '<html><head><link rel="whostyle" href="not-a-valid-url"></head><body></body></html>';

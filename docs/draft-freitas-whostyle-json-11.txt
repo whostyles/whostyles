@@ -61,34 +61,46 @@ Copyright Notice
 2.  Discovery Mechanism
 
    To apply a Whostyle JSON identity, the author's platform MUST broadcast 
-   the location of the JSON document within the HTML head of the syndicated 
-   source page using a standard <link> element. This prevents extra network 
-   round-trips by coupling discovery with the mandatory content verification 
-   request.
+   the styling data within the HTML head of the syndicated source page. 
+   This specification supports two discovery methods: Inline and External. 
+   Host engines MUST support both.
 
-2.1.  The HTML Link Element
+2.1.  Inline Document Discovery
 
-   The host engine MUST scan the fetched source HTML document for a <link> 
-   tag conforming to the following attribute requirements:
+   To bypass cross-origin restrictions (CORS) and eliminate secondary network 
+   requests, the author SHOULD embed the JSON payload directly within the 
+   source document using a script block with a specific MIME type.
 
-   * "rel": MUST be exactly "whostyle".
-   * "type": MUST be exactly "application/json".
-   * "href": MUST contain a valid, absolute URL pointing to the location 
-     of the target Whostyle JSON document.
+   Example representation in HTML:
+   <script type="application/whostyle+json">
+   {
+     "whostyle": {
+       "version": "1.1",
+       "typography": "monospace",
+       ...
+     }
+   }
+   </script>
+
+2.2.  External Document Discovery
+
+   If embedding is not feasible, the author MAY link to an external JSON 
+   document using a standard <link> element.
 
    Example representation in HTML:
    <link rel="whostyle" type="application/json" href="https://example.com/custom.json">
 
-2.2.  Discovery Processing Rules
+2.3.  Discovery Processing Rules
 
-   1. During Webmention verification or content ingestion, the host engine 
-      MUST parse the source document's <head> section.
-   2. If multiple <link rel="whostyle"> tags are present, the host engine 
-      MUST parse only the first occurrence and ignore subsequent entries.
-   3. If the "href" URL points to a third-party domain (a domain different 
-      from the source page), the host MAY reject the request to prevent 
-      cross-domain tracking exploits, unless explicit domain white-listing 
-      is configured.
+   1. During content ingestion, the host engine MUST parse the <head> section 
+      of the source document.
+   2. The host MUST first search for a valid <script type="application/whostyle+json"> 
+      element. If found, it MUST extract and parse the inner text, completely 
+      bypassing external network requests.
+   3. If no inline script is found, the host MUST search for a <link rel="whostyle"> 
+      tag and proceed with the network fetch, subject to the strict constraints 
+      defined in Section 3.
+   4. If both methods are present, the inline script MUST take absolute precedence.
 
 3.  Network and Content Constraints
 

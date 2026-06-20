@@ -94,6 +94,29 @@ export class WhostyleEngine {
         return (brightest + 0.05) / (darkest + 0.05);
     }
 
+    static discoverInline(htmlString) {
+        if (typeof DOMParser !== 'undefined') {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlString, 'text/html');
+                const script = doc.querySelector('script[type="application/whostyle+json"]');
+                if (script && script.textContent.trim()) {
+                    return script.textContent.trim();
+                }
+            } catch (e) {
+                return null;
+            }
+        } else {
+            // Fallback for Node.js test environments
+            const scriptRegex = /<script\s+[^>]*type=["']?application\/whostyle\+json["']?[^>]*>([\s\S]*?)<\/script>/i;
+            const match = htmlString.match(scriptRegex);
+            if (match && match[1] && match[1].trim()) {
+                return match[1].trim();
+            }
+        }
+        return null;
+    }
+
     static discoverUrl(htmlString) {
         // In browser context or DOM environment
         if (typeof DOMParser !== 'undefined') {

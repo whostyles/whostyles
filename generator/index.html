@@ -184,9 +184,37 @@
             margin-bottom: 1rem;
         }
 
-        /* JSON Output */
-        .json-output {
+        /* Output Areas */
+        .output-section {
             margin-top: 2rem;
+        }
+
+        .output-section h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommended-badge {
+            background: #10b981;
+            color: #064e3b;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .instruction {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .json-output {
             background: rgba(0, 0, 0, 0.4);
             padding: 1.5rem;
             border-radius: 8px;
@@ -195,22 +223,35 @@
             color: #10b981;
             white-space: pre-wrap;
             overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 1rem;
         }
 
         .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 1rem;
-            margin-top: 1rem;
+            flex: 1;
+            padding: 0.8rem;
             background: var(--accent);
             color: white;
             text-align: center;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .btn:hover {
@@ -375,6 +416,9 @@
         <!-- Preview & Output Panel -->
         <div class="panel">
             <h2>Live Preview</h2>
+            <div id="contrast_warning" style="display: none; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                <strong>⚠️ Accessibility Warning:</strong> Selected background and text colors do not meet the 4.5:1 WCAG contrast ratio. Fallback colors have been automatically enforced.
+            </div>
             <div class="preview-container">
                 <div class="comment-mock light-mode">
                     <div class="comment-meta"><strong>Alice</strong> replied on example.com</div>
@@ -403,9 +447,27 @@
                 </div>
             </div>
 
-            <h2>Generated JSON</h2>
-            <div class="json-output" id="json_out"></div>
-            <button class="btn" id="btn_download">Download whostyle.json</button>
+            <h2>Export Identity</h2>
+            
+            <div class="output-section">
+                <h3>Embed Inline <span class="recommended-badge">Recommended</span></h3>
+                <p class="instruction">Bypasses CORS restrictions. Paste this code immediately before the <code>&lt;/head&gt;</code> tag of your website.</p>
+                <div class="json-output" id="html_out"></div>
+                <div class="action-row">
+                    <button class="btn secondary" id="btn_copy_html">Copy HTML</button>
+                    <button class="btn" id="btn_download_html">Download snippet.html</button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h3>External Link File</h3>
+                <p class="instruction">Requires hosting a file and configuring CORS <code>Access-Control-Allow-Origin: *</code>.</p>
+                <div class="json-output" id="json_out"></div>
+                <div class="action-row">
+                    <button class="btn secondary" id="btn_copy_json">Copy JSON</button>
+                    <button class="btn" id="btn_download_json">Download whostyle.json</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -423,6 +485,35 @@
 
         function getNum(id) {
             return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function getRelativeLuminance(hex) {
+            const cleanHex = hex.replace(/^#/, '');
+            let r, g, b;
+            if (cleanHex.length === 3) {
+                r = parseInt(cleanHex[0] + cleanHex[0], 16);
+                g = parseInt(cleanHex[1] + cleanHex[1], 16);
+                b = parseInt(cleanHex[2] + cleanHex[2], 16);
+            } else {
+                r = parseInt(cleanHex.substring(0, 2), 16);
+                g = parseInt(cleanHex.substring(2, 4), 16);
+                b = parseInt(cleanHex.substring(4, 6), 16);
+            }
+
+            const a = [r, g, b].map(v => {
+                v /= 255;
+                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+            });
+
+            return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+        }
+
+        function getContrastRatio(color1, color2) {
+            const lum1 = getRelativeLuminance(color1);
+            const lum2 = getRelativeLuminance(color2);
+            const brightest = Math.max(lum1, lum2);
+            const darkest = Math.min(lum1, lum2);
+            return (brightest + 0.05) / (darkest + 0.05);
         }
 
         function updatePreviewAndJSON() {
@@ -443,16 +534,39 @@
             root.style.setProperty('--ws-sblur', getNum('i_sblur') + 'px');
             root.style.setProperty('--ws-lspacing', getNum('i_lspacing') + 'px');
 
+            // Fetch colors
+            let l_bg = getVal('l_bg');
+            let l_text = getVal('l_text');
+            let d_bg = getVal('d_bg');
+            let d_text = getVal('d_text');
+
+            let showWarning = false;
+
+            // Contrast Fallbacks (4.5:1)
+            if (getContrastRatio(l_bg, l_text) < 4.5) {
+                l_bg = '#ffffff';
+                l_text = '#000000';
+                showWarning = true;
+            }
+
+            if (getContrastRatio(d_bg, d_text) < 4.5) {
+                d_bg = '#121212';
+                d_text = '#e0e0e0';
+                showWarning = true;
+            }
+
+            document.getElementById('contrast_warning').style.display = showWarning ? 'block' : 'none';
+
             // Light Theme Colors
-            root.style.setProperty('--ws-bg-light', getVal('l_bg'));
-            root.style.setProperty('--ws-text-light', getVal('l_text'));
+            root.style.setProperty('--ws-bg-light', l_bg);
+            root.style.setProperty('--ws-text-light', l_text);
             root.style.setProperty('--ws-bcolor-light', getVal('l_border'));
             root.style.setProperty('--ws-link-light', getVal('l_link'));
             root.style.setProperty('--ws-lhover-light', getVal('l_lhover'));
 
             // Dark Theme Colors
-            root.style.setProperty('--ws-bg-dark', getVal('d_bg'));
-            root.style.setProperty('--ws-text-dark', getVal('d_text'));
+            root.style.setProperty('--ws-bg-dark', d_bg);
+            root.style.setProperty('--ws-text-dark', d_text);
             root.style.setProperty('--ws-bcolor-dark', getVal('d_border'));
             root.style.setProperty('--ws-link-dark', getVal('d_link'));
             root.style.setProperty('--ws-lhover-dark', getVal('d_lhover'));
@@ -473,15 +587,15 @@
                     letter_spacing: getNum('i_lspacing'),
                     theme: {
                         light: {
-                            background: getVal('l_bg'),
-                            text: getVal('l_text'),
+                            background: l_bg,
+                            text: l_text,
                             border_color: getVal('l_border'),
                             link_color: getVal('l_link'),
                             link_hover_color: getVal('l_lhover')
                         },
                         dark: {
-                            background: getVal('d_bg'),
-                            text: getVal('d_text'),
+                            background: d_bg,
+                            text: d_text,
                             border_color: getVal('d_border'),
                             link_color: getVal('d_link'),
                             link_hover_color: getVal('d_lhover')
@@ -492,6 +606,9 @@
 
             const jsonStr = JSON.stringify(whostyle, null, 4);
             document.getElementById('json_out').textContent = jsonStr;
+            
+            const htmlStr = `<script type="application/whostyle+json">\n${jsonStr}\n</script\>`;
+            document.getElementById('html_out').textContent = htmlStr;
         }
 
         inputs.forEach(id => {
@@ -502,17 +619,38 @@
             }
         });
 
-        document.getElementById('btn_download').addEventListener('click', () => {
-            const jsonText = document.getElementById('json_out').textContent;
-            const blob = new Blob([jsonText], { type: "application/json" });
+        function downloadContent(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "whostyle.json";
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('btn_download_json').addEventListener('click', () => {
+            downloadContent(document.getElementById('json_out').textContent, "whostyle.json", "application/json");
+        });
+
+        document.getElementById('btn_download_html').addEventListener('click', () => {
+            downloadContent(document.getElementById('html_out').textContent, "whostyle_snippet.html", "text/html");
+        });
+
+        document.getElementById('btn_copy_json').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('json_out').textContent);
+            const btn = document.getElementById('btn_copy_json');
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy JSON", 2000);
+        });
+
+        document.getElementById('btn_copy_html').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('html_out').textContent);
+            const btn = document.getElementById('btn_copy_html');
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy HTML", 2000);
         });
 
         // Init

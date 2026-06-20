@@ -177,7 +177,7 @@ const tests = async () => {
         }
     });
 
-    runTest("Discover URL in HTML string", () => {
+    runTest("Discover URL and Inline JSON in HTML string", () => {
         const html = '<!DOCTYPE html><html><head><link rel="whostyle" type="application/json" href="https://example.com/whostyle.json"></head><body></body></html>';
         const url = WhostyleEngine.discoverUrl(html);
         if (url !== 'https://example.com/whostyle.json') {
@@ -187,6 +187,12 @@ const tests = async () => {
         const invalidHtml = '<html><head><link rel="whostyle" href="invalid-url"></head><body></body></html>';
         if (WhostyleEngine.discoverUrl(invalidHtml) !== null) {
             throw new Error("Should return null for invalid URL format or missing type");
+        }
+
+        const htmlInline = '<!DOCTYPE html><html><head><script type="application/whostyle+json">{"whostyle":{"version":"1.1"}}</script></head><body></body></html>';
+        const jsonStr = WhostyleEngine.discoverInline(htmlInline);
+        if (jsonStr !== '{"whostyle":{"version":"1.1"}}') {
+            throw new Error(`Expected inline JSON string, got ${jsonStr}`);
         }
     });
 

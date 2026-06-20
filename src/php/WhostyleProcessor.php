@@ -115,6 +115,26 @@ class WhostyleProcessor {
         return (($brightest + 0.05) / ($darkest + 0.05)) >= 4.5;
     }
 
+    public function discover_inline(string $html): ?string {
+        libxml_use_internal_errors(true);
+        $doc = new DOMDocument();
+        if (!$doc->loadHTML($html)) {
+            libxml_clear_errors();
+            return null;
+        }
+        libxml_clear_errors();
+
+        $xpath = new DOMXPath($doc);
+        $scripts = $xpath->query('//script[@type="application/whostyle+json"]');
+        if ($scripts !== false && $scripts->length > 0) {
+            $json_raw = trim($scripts->item(0)->textContent);
+            if (!empty($json_raw)) {
+                return $json_raw;
+            }
+        }
+        return null;
+    }
+
     public function discover_url(string $html): ?string {
         libxml_use_internal_errors(true);
         $doc = new DOMDocument();
