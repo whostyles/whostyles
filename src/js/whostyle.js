@@ -51,11 +51,17 @@ export class WhostyleEngine {
                 }
             }
 
+            let link = this.colorRegex.test(theme.link_color) ? theme.link_color : text;
+            if (this.getContrastRatio(bg, link) < 4.5) link = text;
+
+            let linkHover = this.colorRegex.test(theme.link_hover_color) ? theme.link_hover_color : text;
+            if (this.getContrastRatio(bg, linkHover) < 4.5) linkHover = text;
+
             s.setProperty('--ws-bg', bg);
             s.setProperty('--ws-text', text);
             s.setProperty('--ws-bcolor', this.colorRegex.test(theme.border_color) ? theme.border_color : text);
-            s.setProperty('--ws-link', this.colorRegex.test(theme.link_color) ? theme.link_color : text);
-            s.setProperty('--ws-lhover', this.colorRegex.test(theme.link_hover_color) ? theme.link_hover_color : text);
+            s.setProperty('--ws-link', link);
+            s.setProperty('--ws-lhover', linkHover);
 
             element.classList.add('whostyle-rendered');
             return true;

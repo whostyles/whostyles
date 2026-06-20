@@ -275,13 +275,17 @@ Copyright Notice
 5.2.  Accessibility and Contrast Validation
 
    Prior to rendering, the host implementation SHOULD calculate the relative 
-   luminance contrast ratio between the parsed "text" color and the 
-   "background" color within each theme object, in accordance with Web Content 
-   Accessibility Guidelines (WCAG) 2.1 specifications.
+   luminance contrast ratio between the "background" color and all foreground 
+   colors ("text", "link_color", and "link_hover_color") within each theme 
+   object, in accordance with Web Content Accessibility Guidelines (WCAG) 2.1 
+   specifications.
 
-   If the computed contrast ratio is less than 4.5:1, the host engine MUST 
-   override the "text" or "background" property to its own default system 
-   values to ensure legibility.
+   If the computed contrast ratio for the primary "text" color is less than 
+   4.5:1, the host engine MUST override the "text" or "background" property 
+   to its own default system values to ensure legibility. Furthermore, if the 
+   contrast ratio for "link_color" or "link_hover_color" fails the 4.5:1 
+   threshold against the background, the host engine MUST override these link 
+   colors to match the validated primary "text" color.
 
 5.3.  Error Resolution and Fallback
 

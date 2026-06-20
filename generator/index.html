@@ -549,9 +549,33 @@
                 showWarning = true;
             }
 
+            let l_link = getVal('l_link');
+            if (getContrastRatio(l_bg, l_link) < 4.5) {
+                l_link = l_text;
+                showWarning = true;
+            }
+
+            let l_lhover = getVal('l_lhover');
+            if (getContrastRatio(l_bg, l_lhover) < 4.5) {
+                l_lhover = l_text;
+                showWarning = true;
+            }
+
             if (getContrastRatio(d_bg, d_text) < 4.5) {
                 d_bg = '#121212';
                 d_text = '#e0e0e0';
+                showWarning = true;
+            }
+
+            let d_link = getVal('d_link');
+            if (getContrastRatio(d_bg, d_link) < 4.5) {
+                d_link = d_text;
+                showWarning = true;
+            }
+
+            let d_lhover = getVal('d_lhover');
+            if (getContrastRatio(d_bg, d_lhover) < 4.5) {
+                d_lhover = d_text;
                 showWarning = true;
             }
 
@@ -561,15 +585,15 @@
             root.style.setProperty('--ws-bg-light', l_bg);
             root.style.setProperty('--ws-text-light', l_text);
             root.style.setProperty('--ws-bcolor-light', getVal('l_border'));
-            root.style.setProperty('--ws-link-light', getVal('l_link'));
-            root.style.setProperty('--ws-lhover-light', getVal('l_lhover'));
+            root.style.setProperty('--ws-link-light', l_link);
+            root.style.setProperty('--ws-lhover-light', l_lhover);
 
             // Dark Theme Colors
             root.style.setProperty('--ws-bg-dark', d_bg);
             root.style.setProperty('--ws-text-dark', d_text);
             root.style.setProperty('--ws-bcolor-dark', getVal('d_border'));
-            root.style.setProperty('--ws-link-dark', getVal('d_link'));
-            root.style.setProperty('--ws-lhover-dark', getVal('d_lhover'));
+            root.style.setProperty('--ws-link-dark', d_link);
+            root.style.setProperty('--ws-lhover-dark', d_lhover);
 
             // Generate JSON Object
             const whostyle = {
@@ -590,15 +614,15 @@
                             background: l_bg,
                             text: l_text,
                             border_color: getVal('l_border'),
-                            link_color: getVal('l_link'),
-                            link_hover_color: getVal('l_lhover')
+                            link_color: l_link,
+                            link_hover_color: l_lhover
                         },
                         dark: {
                             background: d_bg,
                             text: d_text,
                             border_color: getVal('d_border'),
-                            link_color: getVal('d_link'),
-                            link_hover_color: getVal('d_lhover')
+                            link_color: d_link,
+                            link_hover_color: d_lhover
                         }
                     }
                 }

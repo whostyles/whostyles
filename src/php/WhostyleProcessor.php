@@ -52,12 +52,18 @@ class WhostyleProcessor {
                     }
                 }
 
+                $link = $this->validate_color($theme['link_color'] ?? '') ? $theme['link_color'] : $text;
+                if (!$this->check_contrast($bg, $link)) $link = $text;
+
+                $link_hover = $this->validate_color($theme['link_hover_color'] ?? '') ? $theme['link_hover_color'] : $text;
+                if (!$this->check_contrast($bg, $link_hover)) $link_hover = $text;
+
                 $output['theme'][$mode] = [
                     'background' => $bg,
                     'text' => $text,
                     'border_color' => $this->validate_color($theme['border_color'] ?? '') ? $theme['border_color'] : $text,
-                    'link_color' => $this->validate_color($theme['link_color'] ?? '') ? $theme['link_color'] : $text,
-                    'link_hover_color' => $this->validate_color($theme['link_hover_color'] ?? '') ? $theme['link_hover_color'] : $text,
+                    'link_color' => $link,
+                    'link_hover_color' => $link_hover,
                 ];
             }
         }

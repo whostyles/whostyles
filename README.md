@@ -18,7 +18,8 @@ Whostyle JSON abstracts cosmetic styling into non-executable design data tokens.
 ### Key Architectural Rules
 1. **Strict Structural Omission:** Properties altering geometry (`position`, `display`, `float`, `width`, `height`, etc.) or remote background images are explicitly forbidden.
 2. **Deterministic Constraints:** Numeric parameters (borders, shadows, spacing) are strictly bounded and clamped by the host engine.
-3. **Lazy Polling Caching:** To prevent distributed denial-of-service (DDoS) vectors, hosts cache processed tokens locally with a maximum Time-To-Live (TTL) of 30 days. Stale styles are updated asynchronously in the background.
+3. **Accessibility Enforcement:** Contrast ratios for text and links are strictly validated against WCAG 4.5:1 minimums, automatically overriding inaccessible color combinations with readable fallbacks.
+4. **Lazy Polling Caching:** To prevent distributed denial-of-service (DDoS) vectors, hosts cache processed tokens locally with a maximum Time-To-Live (TTL) of 30 days. Stale styles are updated asynchronously in the background.
 
 ---
 
