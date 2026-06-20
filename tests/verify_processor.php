@@ -13,11 +13,15 @@ function run_test($name, $callback) {
 
 $processor = new WhostyleProcessor();
 
-run_test("Valid Version 1.0 JSON Parsing", function() use ($processor) {
+run_test("Valid Version 1.1 JSON Parsing and ENUMs", function() use ($processor) {
     $json = '{
         "whostyle": {
-            "version": "1.0",
+            "version": "1.1",
             "typography": "monospace",
+            "text_transform": "uppercase",
+            "text_align": "center",
+            "list_style_type": "square",
+            "border_style": "dashed",
             "theme": {
                 "light": {
                     "background": "#ffffff",
@@ -33,12 +37,24 @@ run_test("Valid Version 1.0 JSON Parsing", function() use ($processor) {
     if ($res['typography'] !== 'monospace') {
         throw new Exception("Expected typography 'monospace', got '{$res['typography']}'");
     }
+    if ($res['text_transform'] !== 'uppercase') {
+        throw new Exception("Expected text_transform 'uppercase', got '{$res['text_transform']}'");
+    }
+    if ($res['text_align'] !== 'center') {
+        throw new Exception("Expected text_align 'center', got '{$res['text_align']}'");
+    }
+    if ($res['list_style_type'] !== 'square') {
+        throw new Exception("Expected list_style_type 'square', got '{$res['list_style_type']}'");
+    }
+    if ($res['border_style'] !== 'dashed') {
+        throw new Exception("Expected border_style 'dashed', got '{$res['border_style']}'");
+    }
 });
 
-run_test("Reject Invalid Version 1.1 JSON", function() use ($processor) {
+run_test("Reject Invalid Version 1.0 JSON", function() use ($processor) {
     $json = '{
         "whostyle": {
-            "version": "1.1",
+            "version": "1.0",
             "typography": "monospace",
             "theme": {
                 "light": {
@@ -50,7 +66,7 @@ run_test("Reject Invalid Version 1.1 JSON", function() use ($processor) {
     }';
     $res = $processor->process($json);
     if ($res !== null) {
-        throw new Exception("Expected null for version 1.1, got " . json_encode($res));
+        throw new Exception("Expected null for version 1.0, got " . json_encode($res));
     }
 });
 
@@ -71,7 +87,7 @@ run_test("Robustness on Non-Object JSON Values", function() use ($processor) {
 run_test("Clamp Bad/Missing Numeric Limits Safely", function() use ($processor) {
     $json = '{
         "whostyle": {
-            "version": "1.0",
+            "version": "1.1",
             "typography": "sans-serif",
             "border_width": "invalid",
             "border_radius": 99,
@@ -102,7 +118,7 @@ run_test("Clamp Bad/Missing Numeric Limits Safely", function() use ($processor) 
 run_test("Contrast Override Logic (Low Contrast)", function() use ($processor) {
     $json = '{
         "whostyle": {
-            "version": "1.0",
+            "version": "1.1",
             "typography": "sans-serif",
             "theme": {
                 "light": {
@@ -121,13 +137,11 @@ run_test("Contrast Override Logic (Low Contrast)", function() use ($processor) {
         throw new Exception("Returned null for valid JSON with low contrast");
     }
     
-    // Light mode override check
     $light = $res['theme']['light'];
     if ($light['background'] !== '#ffffff' || $light['text'] !== '#000000') {
         throw new Exception("Light mode contrast override failed: bg={$light['background']}, text={$light['text']}");
     }
 
-    // Dark mode override check
     $dark = $res['theme']['dark'];
     if ($dark['background'] !== '#121212' || $dark['text'] !== '#e0e0e0') {
         throw new Exception("Dark mode contrast override failed: bg={$dark['background']}, text={$dark['text']}");
@@ -137,7 +151,7 @@ run_test("Contrast Override Logic (Low Contrast)", function() use ($processor) {
 run_test("Ensure generate_inline_css Does Not Mutate Theme Array", function() use ($processor) {
     $json = '{
         "whostyle": {
-            "version": "1.0",
+            "version": "1.1",
             "typography": "sans-serif",
             "theme": {
                 "light": {
@@ -155,7 +169,6 @@ run_test("Ensure generate_inline_css Does Not Mutate Theme Array", function() us
 });
 
 run_test("Locale-Independent Float Formatting (%.2F)", function() use ($processor) {
-    // Attempt to set locale to a comma-decimal country, e.g., pt_BR, fr_FR, de_DE
     $locales = ['pt_BR.utf8', 'pt_BR', 'fr_FR.utf8', 'fr_FR', 'de_DE.utf8', 'de_DE'];
     $currentLocale = setlocale(LC_NUMERIC, '0');
     foreach ($locales as $loc) {
@@ -166,7 +179,7 @@ run_test("Locale-Independent Float Formatting (%.2F)", function() use ($processo
 
     $json = '{
         "whostyle": {
-            "version": "1.0",
+            "version": "1.1",
             "typography": "sans-serif",
             "letter_spacing": 1.5,
             "theme": {
@@ -180,11 +193,33 @@ run_test("Locale-Independent Float Formatting (%.2F)", function() use ($processo
     $res = $processor->process($json);
     $css = $processor->generate_inline_css($res, 'light');
     
-    // Restore locale
     setlocale(LC_NUMERIC, $currentLocale);
 
     if (strpos($css, '1.50px') === false) {
         throw new Exception("Expected letter_spacing to be formatted as '1.50px', got: '$css'");
+    }
+});
+
+run_test("Discover URL in HTML", function() use ($processor) {
+    $html = '<!DOCTYPE html><html><head><link rel="whostyle" type="application/json" href="https://example.com/whostyle.json"></head><body></body></html>';
+    $url = $processor->discover_url($html);
+    if ($url !== 'https://example.com/whostyle.json') {
+        throw new Exception("Failed to discover correct URL, got: " . $url);
+    }
+
+    $invalid_html = '<html><head><link rel="whostyle" href="not-a-valid-url"></head><body></body></html>';
+    if ($processor->discover_url($invalid_html) !== null) {
+        throw new Exception("Should return null for missing type or invalid URL");
+    }
+});
+
+run_test("Fetch JSON invalid URLs", function() use ($processor) {
+    if ($processor->fetch_json('not-a-url') !== null) {
+        throw new Exception("Should reject invalid URL");
+    }
+    // Network failure or invalid JSON should return null
+    if ($processor->fetch_json('http://localhost:9999/nonexistent.json') !== null) {
+        throw new Exception("Should return null when connection fails");
     }
 });
 

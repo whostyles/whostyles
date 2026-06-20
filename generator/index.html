@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whostyle Generator (v1.1)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            font-size: 2.5rem;
+            background: -webkit-linear-gradient(#60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            width: 90%;
+            max-width: 1400px;
+            padding-bottom: 3rem;
+        }
+
+        .panel {
+            flex: 1;
+            min-width: 350px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .panel h2 {
+            font-family: 'Outfit', sans-serif;
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Form Controls */
+        .control-group {
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .control-row > div {
+            flex: 1;
+        }
+
+        label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+            color: #94a3b8;
+        }
+
+        select, input[type="number"], input[type="text"], input[type="color"] {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent);
+        }
+
+        input[type="color"] {
+            padding: 0;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+
+        /* Previews */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .comment-mock {
+            padding: 1.5rem;
+            border-radius: var(--ws-bradius, 0px);
+            border-style: var(--ws-bstyle, none);
+            border-width: var(--ws-bwidth, 0px);
+            font-family: var(--ws-font, sans-serif);
+            text-transform: var(--ws-transform, none);
+            text-align: var(--ws-align, left);
+            letter-spacing: var(--ws-lspacing, 0px);
+            box-shadow: var(--ws-soffset, 0px) var(--ws-soffset, 0px) var(--ws-sblur, 0px) rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .comment-mock.light-mode {
+            background-color: var(--ws-bg-light, #ffffff);
+            color: var(--ws-text-light, #000000);
+            border-color: var(--ws-bcolor-light, transparent);
+        }
+
+        .comment-mock.dark-mode {
+            background-color: var(--ws-bg-dark, #1e293b);
+            color: var(--ws-text-dark, #f8fafc);
+            border-color: var(--ws-bcolor-dark, transparent);
+        }
+
+        .comment-mock a {
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .comment-mock.light-mode a { color: var(--ws-link-light, #3b82f6); }
+        .comment-mock.light-mode a:hover { color: var(--ws-lhover-light, #2563eb); }
+        
+        .comment-mock.dark-mode a { color: var(--ws-link-dark, #60a5fa); }
+        .comment-mock.dark-mode a:hover { color: var(--ws-lhover-dark, #93c5fd); }
+
+        .comment-mock ul {
+            list-style-type: var(--ws-list, disc);
+            padding-left: 2rem;
+        }
+
+        .comment-meta {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 1rem;
+        }
+
+        /* JSON Output */
+        .json-output {
+            margin-top: 2rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'monospace';
+            font-size: 0.9rem;
+            color: #10b981;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: var(--accent);
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Whostyle Generator</h1>
+        <p>Visually configure and download your personal whostyle.json identity.</p>
+    </header>
+
+    <div class="container">
+        <!-- Controls Panel -->
+        <div class="panel" id="controls">
+            <h2>Design Tokens</h2>
+            
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Typography</label>
+                    <select id="i_typography">
+                        <option value="sans-serif">sans-serif</option>
+                        <option value="serif">serif</option>
+                        <option value="monospace">monospace</option>
+                        <option value="cursive">cursive</option>
+                        <option value="fantasy">fantasy</option>
+                        <option value="system-ui">system-ui</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Text Transform</label>
+                    <select id="i_transform">
+                        <option value="none">none</option>
+                        <option value="capitalize">capitalize</option>
+                        <option value="uppercase">uppercase</option>
+                        <option value="lowercase">lowercase</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Text Align</label>
+                    <select id="i_align">
+                        <option value="left">left</option>
+                        <option value="right">right</option>
+                        <option value="center">center</option>
+                        <option value="justify">justify</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>List Style</label>
+                    <select id="i_list">
+                        <option value="disc">disc</option>
+                        <option value="circle">circle</option>
+                        <option value="square">square</option>
+                        <option value="decimal">decimal</option>
+                        <option value="lower-roman">lower-roman</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Border Style</label>
+                    <select id="i_bstyle">
+                        <option value="none">none</option>
+                        <option value="hidden">hidden</option>
+                        <option value="solid">solid</option>
+                        <option value="dashed">dashed</option>
+                        <option value="dotted">dotted</option>
+                        <option value="double">double</option>
+                        <option value="groove">groove</option>
+                        <option value="ridge">ridge</option>
+                        <option value="inset">inset</option>
+                        <option value="outset">outset</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Border Width (0-4px)</label>
+                    <input type="number" id="i_bwidth" value="0" min="0" max="4">
+                </div>
+                <div class="control-group">
+                    <label>Border Radius (0-16px)</label>
+                    <input type="number" id="i_bradius" value="0" min="0" max="16">
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Shadow Offset (-4 to 4px)</label>
+                    <input type="number" id="i_soffset" value="0" min="-4" max="4">
+                </div>
+                <div class="control-group">
+                    <label>Shadow Blur (0-8px)</label>
+                    <input type="number" id="i_sblur" value="0" min="0" max="8">
+                </div>
+                <div class="control-group">
+                    <label>Letter Spacing</label>
+                    <input type="number" id="i_lspacing" value="0" min="-0.5" max="2" step="0.1">
+                </div>
+            </div>
+
+            <h2>Theme: Light Mode</h2>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Background</label>
+                    <input type="color" id="l_bg" value="#ffffff">
+                </div>
+                <div class="control-group">
+                    <label>Text</label>
+                    <input type="color" id="l_text" value="#0f172a">
+                </div>
+                <div class="control-group">
+                    <label>Border</label>
+                    <input type="color" id="l_border" value="#cbd5e1">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Link</label>
+                    <input type="color" id="l_link" value="#3b82f6">
+                </div>
+                <div class="control-group">
+                    <label>Link Hover</label>
+                    <input type="color" id="l_lhover" value="#2563eb">
+                </div>
+            </div>
+
+            <h2>Theme: Dark Mode</h2>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Background</label>
+                    <input type="color" id="d_bg" value="#0f172a">
+                </div>
+                <div class="control-group">
+                    <label>Text</label>
+                    <input type="color" id="d_text" value="#f8fafc">
+                </div>
+                <div class="control-group">
+                    <label>Border</label>
+                    <input type="color" id="d_border" value="#334155">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Link</label>
+                    <input type="color" id="d_link" value="#60a5fa">
+                </div>
+                <div class="control-group">
+                    <label>Link Hover</label>
+                    <input type="color" id="d_lhover" value="#93c5fd">
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview & Output Panel -->
+        <div class="panel">
+            <h2>Live Preview</h2>
+            <div class="preview-container">
+                <div class="comment-mock light-mode">
+                    <div class="comment-meta"><strong>Alice</strong> replied on example.com</div>
+                    <div>
+                        I absolutely love this new decentralized style format! It makes my comments feel like they belong to me.
+                        Check out my <a href="#">personal website</a> for more.
+                        <ul>
+                            <li>Data-driven</li>
+                            <li>Secure</li>
+                            <li>Aesthetic</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="comment-mock dark-mode">
+                    <div class="comment-meta"><strong>Bob</strong> replied on anothersite.net</div>
+                    <div>
+                        Dark mode fallback is working perfectly. The contrast ensures everything remains legible.
+                        Have you read the <a href="#">specification draft</a> yet?
+                        <ul>
+                            <li>No CSS injection</li>
+                            <li>Graceful fallbacks</li>
+                            <li>Cross-platform</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Generated JSON</h2>
+            <div class="json-output" id="json_out"></div>
+            <button class="btn" id="btn_download">Download whostyle.json</button>
+        </div>
+    </div>
+
+    <script>
+        const inputs = [
+            'i_typography', 'i_transform', 'i_align', 'i_list', 'i_bstyle', 
+            'i_bwidth', 'i_bradius', 'i_soffset', 'i_sblur', 'i_lspacing',
+            'l_bg', 'l_text', 'l_border', 'l_link', 'l_lhover',
+            'd_bg', 'd_text', 'd_border', 'd_link', 'd_lhover'
+        ];
+
+        function getVal(id) {
+            return document.getElementById(id).value;
+        }
+
+        function getNum(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function updatePreviewAndJSON() {
+            // Update CSS Variables for Previews
+            const root = document.documentElement;
+            
+            // Global properties
+            root.style.setProperty('--ws-font', getVal('i_typography'));
+            root.style.setProperty('--ws-transform', getVal('i_transform'));
+            root.style.setProperty('--ws-align', getVal('i_align'));
+            root.style.setProperty('--ws-list', getVal('i_list'));
+            root.style.setProperty('--ws-bstyle', getVal('i_bstyle'));
+            
+            // Numerics
+            root.style.setProperty('--ws-bwidth', getNum('i_bwidth') + 'px');
+            root.style.setProperty('--ws-bradius', getNum('i_bradius') + 'px');
+            root.style.setProperty('--ws-soffset', getNum('i_soffset') + 'px');
+            root.style.setProperty('--ws-sblur', getNum('i_sblur') + 'px');
+            root.style.setProperty('--ws-lspacing', getNum('i_lspacing') + 'px');
+
+            // Light Theme Colors
+            root.style.setProperty('--ws-bg-light', getVal('l_bg'));
+            root.style.setProperty('--ws-text-light', getVal('l_text'));
+            root.style.setProperty('--ws-bcolor-light', getVal('l_border'));
+            root.style.setProperty('--ws-link-light', getVal('l_link'));
+            root.style.setProperty('--ws-lhover-light', getVal('l_lhover'));
+
+            // Dark Theme Colors
+            root.style.setProperty('--ws-bg-dark', getVal('d_bg'));
+            root.style.setProperty('--ws-text-dark', getVal('d_text'));
+            root.style.setProperty('--ws-bcolor-dark', getVal('d_border'));
+            root.style.setProperty('--ws-link-dark', getVal('d_link'));
+            root.style.setProperty('--ws-lhover-dark', getVal('d_lhover'));
+
+            // Generate JSON Object
+            const whostyle = {
+                whostyle: {
+                    version: "1.1",
+                    typography: getVal('i_typography'),
+                    text_transform: getVal('i_transform'),
+                    text_align: getVal('i_align'),
+                    list_style_type: getVal('i_list'),
+                    border_style: getVal('i_bstyle'),
+                    border_width: parseInt(getNum('i_bwidth')),
+                    border_radius: parseInt(getNum('i_bradius')),
+                    shadow_offset: parseInt(getNum('i_soffset')),
+                    shadow_blur: parseInt(getNum('i_sblur')),
+                    letter_spacing: getNum('i_lspacing'),
+                    theme: {
+                        light: {
+                            background: getVal('l_bg'),
+                            text: getVal('l_text'),
+                            border_color: getVal('l_border'),
+                            link_color: getVal('l_link'),
+                            link_hover_color: getVal('l_lhover')
+                        },
+                        dark: {
+                            background: getVal('d_bg'),
+                            text: getVal('d_text'),
+                            border_color: getVal('d_border'),
+                            link_color: getVal('d_link'),
+                            link_hover_color: getVal('d_lhover')
+                        }
+                    }
+                }
+            };
+
+            const jsonStr = JSON.stringify(whostyle, null, 4);
+            document.getElementById('json_out').textContent = jsonStr;
+        }
+
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', updatePreviewAndJSON);
+                el.addEventListener('change', updatePreviewAndJSON);
+            }
+        });
+
+        document.getElementById('btn_download').addEventListener('click', () => {
+            const jsonText = document.getElementById('json_out').textContent;
+            const blob = new Blob([jsonText], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "whostyle.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Init
+        updatePreviewAndJSON();
+    </script>
+</body>
+</html>

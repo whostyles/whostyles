@@ -16,7 +16,7 @@
             "properties": {
                 "version": {
                     "type": "string",
-                    "const": "1.0"
+                    "const": "1.1"
                 },
                 "typography": {
                     "type": "string",

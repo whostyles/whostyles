@@ -10,7 +10,7 @@ class WhostyleProcessor {
         if (!is_array($data) || !isset($data['whostyle']) || !is_array($data['whostyle'])) return null;
 
         $ws = $data['whostyle'];
-        if (($ws['version'] ?? '') !== '1.0') return null;
+        if (($ws['version'] ?? '') !== '1.1') return null;
 
         // 1. Typography and Enum Validation
         $output = [
@@ -113,5 +113,77 @@ class WhostyleProcessor {
         $brightest = max($lum1, $lum2);
         $darkest = min($lum1, $lum2);
         return (($brightest + 0.05) / ($darkest + 0.05)) >= 4.5;
+    }
+
+    public function discover_url(string $html): ?string {
+        libxml_use_internal_errors(true);
+        $doc = new DOMDocument();
+        if (!$doc->loadHTML($html)) {
+            libxml_clear_errors();
+            return null;
+        }
+        libxml_clear_errors();
+
+        $xpath = new DOMXPath($doc);
+        $links = $xpath->query('//link[@rel="whostyle"]');
+        if ($links !== false && $links->length > 0) {
+            foreach ($links as $link) {
+                if ($link->getAttribute('type') === 'application/json' && $link->hasAttribute('href')) {
+                    $url = $link->getAttribute('href');
+                    if (filter_var($url, FILTER_VALIDATE_URL)) {
+                        return $url;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public function fetch_json(string $url): ?string {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) return null;
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => "Accept: application/json\r\n",
+                'timeout' => 5,
+                'ignore_errors' => true
+            ]
+        ]);
+
+        $stream = @fopen($url, 'r', false, $context);
+        if (!$stream) return null;
+
+        $meta = stream_get_meta_data($stream);
+        $headers = $meta['wrapper_data'] ?? [];
+        $content_type_valid = false;
+        
+        foreach ($headers as $header) {
+            if (stripos($header, 'Content-Length:') === 0) {
+                $len = (int)trim(substr($header, 15));
+                if ($len > 4096) {
+                    fclose($stream);
+                    return null;
+                }
+            }
+            if (stripos($header, 'Content-Type:') === 0) {
+                $type = strtolower(trim(substr($header, 13)));
+                if (strpos($type, 'application/json') !== false) {
+                    $content_type_valid = true;
+                }
+            }
+        }
+        
+        if (!$content_type_valid) {
+            fclose($stream);
+            return null;
+        }
+
+        $data = stream_get_contents($stream, 4097);
+        fclose($stream);
+        
+        if (strlen($data) > 4096) return null;
+
+        return $data;
     }
 }

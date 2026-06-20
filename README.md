@@ -1,4 +1,4 @@
-# Whostyle JSON (v1.0)
+# Whostyle JSON (v1.1)
 
 An open, structured, data-driven format for syndicating personal typographic and cosmetic styles across decentralized web platforms (IndieWeb, Fediverse) without compromising host security, performance, or layout integrity.
 
@@ -29,7 +29,7 @@ Authors host a `whostyle.json` file on their own domain. The structure strictly 
 ```json
 {
   "whostyle": {
-    "version": "1.0",
+    "version": "1.1",
     "typography": "monospace",
     "text_transform": "none",
     "text_align": "left",
@@ -72,14 +72,26 @@ The `WhostyleProcessor.php` class parses the raw JSON input, validates keys and 
 ```php
 // Usage Example
 $processor = new WhostyleProcessor();
-$processed = $processor->process($raw_json_input);
 
-if ($processed) {
-    // Generate inline style attributes safely formatted for the active theme mode
-    $inline_css = $processor->generate_inline_css($processed, 'light');
-    echo '<div class="comment-body whostyle-rendered" style="' . htmlspecialchars($inline_css) . '">';
-    echo $sanitized_comment_content;
-    echo '</div>';
+// 1. Discover the Whostyle URL from a syndicated HTML document
+$url = $processor->discover_url($syndicated_html);
+
+if ($url) {
+    // 2. Safely fetch the JSON payload (enforces 4KB limit and Content-Type)
+    $raw_json_input = $processor->fetch_json($url);
+    
+    if ($raw_json_input) {
+        // 3. Process the JSON and clamp numeric properties
+        $processed = $processor->process($raw_json_input);
+
+        if ($processed) {
+            // 4. Generate inline style attributes safely formatted for the active theme mode
+            $inline_css = $processor->generate_inline_css($processed, 'light');
+            echo '<div class="comment-body whostyle-rendered" style="' . htmlspecialchars($inline_css) . '">';
+            echo $sanitized_comment_content;
+            echo '</div>';
+        }
+    }
 }
 
 ```
@@ -91,11 +103,20 @@ The `WhostyleEngine` class can be used to validate and apply the style design to
 ```javascript
 import { WhostyleEngine } from './whostyle.js';
 
-const commentElement = document.getElementById('comment-123');
-const rawJson = await fetchUserWhostyle();
+// 1. Discover the Whostyle URL from the HTML string
+const url = WhostyleEngine.discoverUrl(syndicatedHtmlString);
 
-// Safely sanitizes, clamps, and injects CSS custom properties inline
-WhostyleEngine.apply(commentElement, rawJson, 'dark');
+if (url) {
+    // 2. Safely fetch the JSON payload (enforces 4KB limit and Content-Type)
+    const rawJson = await WhostyleEngine.fetchJson(url);
+
+    if (rawJson) {
+        const commentElement = document.getElementById('comment-123');
+
+        // 3. Safely sanitizes, clamps, and injects CSS custom properties inline
+        WhostyleEngine.apply(commentElement, rawJson, 'dark');
+    }
+}
 
 ```
 
@@ -105,7 +126,9 @@ WhostyleEngine.apply(commentElement, rawJson, 'dark');
 
 ```text
 ├── docs/
-│   └── draft-freitas-whostyle-json-01.txt  <- IETF-style RFC Specification Document
+│   └── draft-freitas-whostyle-json-11.txt  <- IETF-style RFC Specification Document
+├── generator/
+│   └── index.html                          <- Modern Web UI Generator for whostyle.json
 ├── schema/
 │   └── whostyle.schema.json                <- JSON Schema Draft 2020-12 validation file
 ├── src/
