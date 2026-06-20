@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../src/php/WhostyleProcessor.php';
 
-function run_test($name, $callback) {
+function run_test(string $name, callable $callback) {
     try {
         $callback();
         echo "✅ TEST PASSED: $name\n";

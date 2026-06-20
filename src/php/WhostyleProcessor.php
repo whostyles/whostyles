@@ -154,10 +154,12 @@ class WhostyleProcessor {
         $links = $xpath->query('//link[@rel="whostyle"]');
         if ($links !== false && $links->length > 0) {
             foreach ($links as $link) {
-                if ($link->getAttribute('type') === 'application/json' && $link->hasAttribute('href')) {
-                    $url = $link->getAttribute('href');
-                    if (filter_var($url, FILTER_VALIDATE_URL)) {
-                        return $url;
+                if ($link instanceof \DOMElement) {
+                    if ($link->getAttribute('type') === 'application/json' && $link->hasAttribute('href')) {
+                        $url = $link->getAttribute('href');
+                        if (filter_var($url, FILTER_VALIDATE_URL)) {
+                            return $url;
+                        }
                     }
                 }
             }
