@@ -9,7 +9,7 @@ on:
 jobs:
   test-js:
     name: Testes JavaScript
-    runs-on: ubuntu-latest
+    runs-on: codeberg-tiny
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
 
   test-php:
     name: Testes PHP
-    runs-on: ubuntu-latest
+    runs-on: codeberg-tiny
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
