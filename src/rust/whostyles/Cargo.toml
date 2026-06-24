@@ -1,0 +1,15 @@
+[package]
+name = "whostyles"
+version = "2.0.0"
+edition = "2021"
+authors = ["Lumen Freitas"]
+description = "Whostyle V2: Structured, data-driven format for syndicating personal typographic and cosmetic styles"
+repository = "https://codeberg.org/whostyles/whostyles"
+license = "MIT"
+
+[dependencies]
+regex = "1"
+
+[dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

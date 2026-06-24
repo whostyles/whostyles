@@ -1,0 +1,144 @@
+Network Working Group                                     L. Freitas, Ed.
+Internet-Draft                                             Canimandra Lab
+Intended status: Informational                              June 24, 2026
+Expires: December 24, 2026
+
+
+                 The Whostyle Protocol (V2) Specification
+                       draft-freitas-whostyle-20
+
+Abstract
+
+   This document defines Whostyle Protocol V2, a structured, data-driven 
+   format for syndicating personal typographic and cosmetic styles 
+   across decentralized web platforms (e.g., the IndieWeb, Fediverse).
+   By constraining user-defined styles to a strict subset of design 
+   tokens encoded via mathematical bitpacking into a 45-byte Base64 hash, 
+   this specification enables host platforms to render third-party 
+   syndicated content while guaranteeing layout integrity, performance, 
+   accessibility, and mitigation of CSS injection vulnerabilities.
+
+Status of This Memo
+
+   This Internet-Draft is in full conformance with the provisions of
+   BCP 14 [RFC2119] [RFC8174].
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+1.  Introduction
+
+   Decentralized web interactions, such as Webmentions [W3C.REC-webmention],
+   often strip the original author's visual identity when displaying 
+   syndicated responses on a host platform. Prior attempts to preserve 
+   visual identity relied on raw CSS injection or IFrames, 
+   introducing severe security vectors and high computational overhead.
+   Version 1.1 of this specification utilized a JSON payload, but the 
+   parsing overhead and file size constraints proved suboptimal.
+
+   Whostyle V2 solves these design flaws by abstracting cosmetic 
+   styles into a mathematical bitpacked hash (e.g., {ws2:...}). 
+   This format translates styling into non-executable design data, 
+   eliminating structural layout properties (such as position, display, 
+   and float) and third-party asset loading (such as external web fonts).
+
+2.  Discovery Mechanism
+
+   To apply a Whostyle identity, the author's platform MUST broadcast 
+   the styling data Hash within the syndicated text or HTML document.
+
+2.1.  Meta Tag Discovery (Recommended)
+
+   The author SHOULD embed the payload directly within the source 
+   document's <head> using a meta tag.
+
+   Example representation in HTML:
+   <meta name="whostyle" content="{ws2:1mBxq6lG0u0uG0u1g1E4a4a1g1E2e2e}">
+
+2.2.  Inline Text Discovery (Fallback)
+
+   If embedding in the <head> is not feasible (such as in comment systems 
+   that only allow raw text), the author MAY include the hash directly in 
+   the body text. Host engines MUST scan the raw text for the regex pattern:
+   {ws2:[A-Za-z0-9\-_]{39}}
+
+3.  Hash Specification
+
+   A Whostyle Hash MUST consist of exactly 45 characters, formatted as:
+   {ws2:CCCCCCCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+
+   Where:
+   - "{ws2:" (5 chars) is the protocol prefix.
+   - "C" (7 chars) is the Base64 representation of the integer Configuration state.
+   - "x" (32 chars) is the Base64 representation of the 8 Theme Colors.
+   - "}" (1 char) is the suffix.
+
+3.1. Base64 Alphabet
+
+   The encoding MUST strictly use the following 64-character alphabet:
+   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_
+
+4.  Configuration Bitpacking (Radixes)
+
+   The first 7 Base64 characters encode an integer that represents the 
+   stylistic configuration. The integer is calculated by sequentially 
+   multiplying properties by their maximum bounds (radixes).
+
+   The bounds are:
+   - typography: 28
+   - transform: 4
+   - align: 4
+   - list: 5
+   - border_style: 10
+   - bg_texture: 32
+   - border_width: 7
+   - border_radius: 17
+   - shadow_offset: 9
+   - shadow_blur: 9
+   - letter_spacing: 26
+
+   The maximum theoretical integer state is ~179.6 billion, which easily 
+   fits within standard 64-bit integer limits (and JS Number.MAX_SAFE_INTEGER).
+
+5.  Processing and Host Enforcement Rules
+
+5.1.  Strict Structural Omission
+
+   Host implementations MUST NOT parse, translate, or inject structural layout 
+   properties from the syndicated entity. Properties including, but not 
+   limited to, "position", "display", "float", "clear", "width", "height", 
+   "z-index", "margin", and "padding" are explicitly forbidden to ensure the 
+   host platform retains absolute authority over document geometry.
+
+5.2.  Accessibility and Contrast Validation
+
+   Prior to rendering, the host implementation SHOULD calculate the relative 
+   luminance contrast ratio between the "background" color and all foreground 
+   colors in accordance with Web Content Accessibility Guidelines (WCAG) 2.1.
+
+   If the computed contrast ratio is less than 4.5:1, the host engine MUST 
+   override the colors to ensure legibility.
+
+6.  Security Considerations
+
+   Whostyle V2 addresses major security concerns associated with arbitrary 
+   CSS ingestion. By avoiding raw stylesheet parsing, parsing libraries are 
+   immune to CSS-based data exfiltration, blind injection attacks, and regular 
+   expression Denial of Service (ReDoS) vulnerabilities. The 45-byte hash 
+   prevents bandwidth exhaustion.
+
+7.  References
+
+   [W3C.REC-webmention]
+              Sande, C., "Webmention", W3C Recommendation REC-
+              webmention-20170112, January 2017,
+              <https://www.w3.org/TR/webmention/>.
+
+Author's Address
+
+   Lumen Freitas (Editor)
+   Canimandra Lab
+   Santo Amaro da Imperatriz, SC
+   Brazil

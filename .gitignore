@@ -1,0 +1,7 @@
+ROADMAP.md
+target/
+__pycache__/
+*.egg-info/
+node_modules/
+vendor/
+.DS_Store

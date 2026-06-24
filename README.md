@@ -1,8 +1,8 @@
-# Whostyle JSON (v1.1)
+# Whostyle V2 (Hash Protocol)
 
 An open, structured, data-driven format for syndicating personal typographic and cosmetic styles across decentralized web platforms (IndieWeb, Fediverse) without compromising host security, performance, or layout integrity.
 
-This repository contains the official IETF-style specification, the JSON Schema validation document, and zero-dependency reference implementations for both PHP and JavaScript.
+Whostyle V2 completely abandons JSON in favor of an ultra-compact Base64 Bitpacked Hash (`{ws2:...}`), dramatically reducing network payload to just 45 bytes while maintaining ~179.6 billion possible styling states.
 
 ## The Problem with Raw CSS Syndication
 
@@ -11,75 +11,34 @@ Prior attempts to preserve visual identity in syndicated content (such as Webmen
 * **Layout Hijacking:** Unsanitized CSS can inject structural properties (`position: fixed`, `float`, `z-index`, `margin`) that break the host's document geometry.
 * **Performance:** Relying on IFrames adds massive memory and rendering overhead in dense comment sections.
 
-## The Whostyle JSON Solution
+## The Whostyle V2 Solution
 
-Whostyle JSON abstracts cosmetic styling into non-executable design data tokens. It strips away all structural layout properties and remote third-party asset loading (such as external web fonts via `@font-face`), handing absolute layout authority back to the host platform.
+Whostyle abstracts cosmetic styling into non-executable design data tokens encoded in a Base64 hash. It strips away all structural layout properties and remote third-party asset loading (such as external web fonts via `@font-face`), handing absolute layout authority back to the host platform.
 
 ### Key Architectural Rules
 1. **Strict Structural Omission:** Properties altering geometry (`position`, `display`, `float`, `width`, `height`, etc.) or remote background images are explicitly forbidden.
 2. **Deterministic Constraints:** Numeric parameters (borders, shadows, spacing) are strictly bounded and clamped by the host engine.
-3. **Accessibility Enforcement:** Contrast ratios for text and links are strictly validated against WCAG 4.5:1 minimums, automatically overriding inaccessible color combinations with readable fallbacks.
-4. **Lazy Polling Caching:** To prevent distributed denial-of-service (DDoS) vectors, hosts cache processed tokens locally with a maximum Time-To-Live (TTL) of 30 days. Stale styles are updated asynchronously in the background.
+3. **Accessibility Enforcement:** Contrast ratios for text and links are strictly validated against WCAG minimums by the host.
+4. **Ultra-Compact Hash:** The entire configuration and color scheme are packed into a 45-character hash (`{ws2:...}`), allowing injection directly into text or meta tags without JSON overhead.
 
 ---
 
-## Specification Schema Example
+## Discovery Mechanism
 
-Authors can either embed the JSON directly into their HTML `<head>` (Inline Discovery) or host a `whostyle.json` file on their own domain (External Discovery). The structure strictly conforms to the following schema:
+Authors can embed their Whostyle hash in two ways:
 
-**Option A: Inline Discovery (Recommended)**
+**Option A: Meta Tag (Recommended)**
 ```html
-<script type="application/whostyle+json">
-{
-  "whostyle": {
-    "version": "1.1",
-    "typography": "monospace",
-    "theme": { ... }
-  }
-}
-</script>
-```
-*Note: Inline discovery is highly recommended because it bypasses Cross-Origin Resource Sharing (CORS) restrictions and eliminates secondary network requests.*
-
-**Option B: External Document Discovery**
-```html
-<link rel="whostyle" type="application/json" href="https://example.com/whostyle.json">
+<meta name="whostyle" content="{ws2:1mBxq6lG0u0uG0u1g1E4a4a1g1E2e2e}">
 ```
 
-```json
-{
-  "whostyle": {
-    "version": "1.1",
-    "typography": "monospace",
-    "text_transform": "none",
-    "text_align": "left",
-    "list_style_type": "disc",
-    "border_style": "dashed",
-    "border_width": 2,
-    "border_radius": 4,
-    "shadow_offset": 1,
-    "shadow_blur": 2,
-    "letter_spacing": 0.5,
-    "theme": {
-      "light": {
-        "background": "#f4f4f0",
-        "text": "#222222",
-        "border_color": "#dd8800",
-        "link_color": "#0066cc",
-        "link_hover_color": "#ff4400"
-      },
-      "dark": {
-        "background": "#1a1a1a",
-        "text": "#e0e0e0",
-        "border_color": "#ffaa00",
-        "link_color": "#66b2ff",
-        "link_hover_color": "#ff6666"
-      }
-    }
-  }
-}
-
+**Option B: Inline Text Fallback**
+For systems that do not support custom `<meta>` tags in the `<head>` (like Commentpara.de), the hash can be placed anywhere in the raw text content:
+```text
+This is an amazing post! I really enjoyed it.
+{ws2:1mBxq6lG0u0uG0u1g1E4a4a1g1E2e2e}
 ```
+The parsers will automatically extract the valid `{ws2:...}` sequence from the text body.
 
 ---
 
@@ -87,64 +46,38 @@ Authors can either embed the JSON directly into their HTML `<head>` (Inline Disc
 
 ### PHP (Back-end Processing)
 
-The `WhostyleProcessor.php` class parses the raw JSON input, validates keys and strict boundaries, and generates safe inline CSS custom properties (variables).
+The `Whostyles` class decodes the Base64 hash into configuration variables and colors, safely validating bounds.
 
 ```php
-// Usage Example
-$processor = new WhostyleProcessor();
+require 'src/php/Whostyles.php';
 
-// 1. First, attempt to discover the Whostyle JSON inline (bypasses CORS and network)
-$raw_json_input = $processor->discover_inline($syndicated_html);
+// 1. Discover the Whostyle hash either from a <meta> tag or directly from raw text
+$hash = Whostyles::discoverInline($syndicated_html);
 
-if (!$raw_json_input) {
-    // 2. If no inline script, discover the external URL
-    $url = $processor->discover_url($syndicated_html);
+if ($hash) {
+    // 2. Decode the hash into safe styling properties
+    $decoded = Whostyles::decode($hash);
 
-    if ($url) {
-        // 3. Safely fetch the JSON payload (enforces 4KB limit and Content-Type)
-        $raw_json_input = $processor->fetch_json($url);
-    }
-}
-
-if ($raw_json_input) {
-    // 4. Process the JSON and clamp numeric properties
-    $processed = $processor->process($raw_json_input);
-
-    if ($processed) {
-        // 5. Generate inline style attributes safely formatted for the active theme mode
-        $inline_css = $processor->generate_inline_css($processed, 'light');
-        echo '<div class="comment-body whostyle-rendered" style="' . htmlspecialchars($inline_css) . '">';
-        echo $sanitized_comment_content;
-        echo '</div>';
+    if ($decoded) {
+        $config = $decoded['config']; // typography, border_style, etc.
+        $colors = $decoded['colors']; // light_bg, dark_bg, etc.
+        
+        // 3. Generate and inject CSS variables to the host wrapper...
     }
 }
 ```
 
 ### JavaScript / Modern Web (Front-end Engine)
 
-The `WhostyleEngine` class can be used to validate and apply the style design tokens directly onto a specific DOM element dynamically.
+The `WhostyleCore` and `WhostyleDOM` objects decode and apply the classes and Custom Properties directly to a DOM element.
 
 ```javascript
-import { WhostyleEngine } from './whostyle.js';
+import { WhostyleCore } from './whostyle-core.js';
+import { WhostyleDOM } from './whostyle-dom.js';
 
-// 1. First, attempt to discover the Whostyle JSON inline (bypasses CORS and network)
-let rawJson = WhostyleEngine.discoverInline(syndicatedHtmlString);
-
-if (!rawJson) {
-    // 2. If no inline script, discover the external URL
-    const url = WhostyleEngine.discoverUrl(syndicatedHtmlString);
-    if (url) {
-        // 3. Safely fetch the JSON payload (enforces 4KB limit and Content-Type)
-        rawJson = await WhostyleEngine.fetchJson(url);
-    }
-}
-
-if (rawJson) {
-    const commentElement = document.getElementById('comment-123');
-
-    // 4. Safely sanitizes, clamps, and injects CSS custom properties inline
-    WhostyleEngine.apply(commentElement, rawJson, 'dark');
-}
+// Apply directly to a comment element, discovering the hash inside the raw HTML/Text
+const commentElement = document.getElementById('comment-123');
+WhostyleDOM.applyFromMeta(commentElement); // Automatically extracts the hash and applies classes
 ```
 
 ---
@@ -153,36 +86,82 @@ if (rawJson) {
 
 ```text
 ├── docs/
-│   └── draft-freitas-whostyle-json-11.txt  <- IETF-style RFC Specification Document
+│   └── draft-freitas-whostyle-20.txt       <- IETF-style RFC Specification Document
 ├── generator/
-│   └── index.html                          <- Modern Web UI Generator for whostyle.json
-├── schema/
-│   └── whostyle.schema.json                <- JSON Schema Draft 2020-12 validation file
+│   └── index.html                          <- Modern Web UI Generator for the Hash
 ├── src/
 │   ├── php/
-│   │   └── WhostyleProcessor.php           <- Native PHP processing class
-│   └── js/
-│       └── whostyle.js                     <- ESM/JavaScript Modern runtime engine
+│   │   └── Whostyles.php                   <- Native PHP processing class
+│   ├── js/
+│   │   ├── whostyle-core.js                <- Core Encoding/Decoding Logic
+│   │   └── whostyle-dom.js                 <- DOM Wrapper for Browser application
+│   └── css/
+│       ├── typography.css                  <- Host-enforced safe font stacks
+│       └── textures.css                    <- Host-enforced native CSS textures
 ├── tests/
-│   ├── verify_processor.php                <- PHP validation script
-│   └── verify_engine.js                    <- JS validation script
+│   ├── verify.php                          <- PHP validation script
+│   └── verify_core.js                      <- JS validation script
 └── README.md                               <- This documentation file
+```
+
+## Installation & Ecosystem
+
+The Whostyles V2 protocol is available natively across multiple backend and frontend ecosystems.
+
+### JavaScript (NPM)
+```bash
+npm install @whostyles/whostyles
+```
+```javascript
+import { WhostyleCore } from '@whostyles/whostyles';
+```
+
+### PHP (Packagist)
+```bash
+composer require whostyles/whostyles
+```
+```php
+use Whostyles\Whostyles;
+```
+
+### Python (PyPI)
+```bash
+pip install whostyles
+```
+```python
+from whostyles import Whostyles
+```
+
+### Go
+```bash
+go get codeberg.org/whostyles/whostyles/src/go/whostyles
+```
+```go
+import "codeberg.org/whostyles/whostyles"
+```
+
+### Rust (Crates.io)
+```bash
+cargo add whostyles
+```
+```rust
+use whostyles::{encode, decode, discover_inline};
 ```
 
 ## Running the Tests
 
-To verify the compliance, safety, and correctness of both reference implementations (including type checks and WCAG contrast validation), you can run the test suite:
+To verify the compliance and correctness of the mathematical bitpacking models:
 
 ### PHP Implementation
 Run the PHP verification script:
 ```bash
-php tests/verify_processor.php
+php tests/verify.php
 ```
 
 ### JavaScript Implementation
 Run the JS verification script (requires Node.js):
 ```bash
-node tests/verify_engine.js
+node tests/verify_core.js
 ```
 
 ## Contributing and Governance
@@ -190,8 +169,6 @@ node tests/verify_engine.js
 This project is a decentralized web standard proposal.
 
 The primary development, issue tracking, and specification design discussions occur sovereignly on **Codeberg**:
-👉 [https://codeberg.org/lumenpink/whostyles](https://codeberg.org/lumenpink/whostyles)
-
-A read-only/automated mirror is maintained on GitHub to maximize developer reach and ecosystem integration. Pull Requests submitted via GitHub will be automatically evaluated and synced back to the main canonical tree.
+👉 [https://codeberg.org/whostyles/whostyles](https://codeberg.org/whostyles/whostyles)
 
 License: MIT. Free software for a free, sovereign web.

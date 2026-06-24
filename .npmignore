@@ -1,0 +1,9 @@
+src/go/
+src/php/
+src/python/
+src/rust/
+tests/
+generator/
+validator/
+docs/
+*.md

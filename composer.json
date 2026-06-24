@@ -1,0 +1,23 @@
+{
+    "name": "whostyles/whostyles",
+    "description": "Whostyle V2: Structured, data-driven format for syndicating personal typographic and cosmetic styles",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lumen Freitas"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Whostyles\\": "src/php/"
+        }
+    },
+    "support": {
+        "source": "https://codeberg.org/whostyles/whostyles",
+        "issues": "https://codeberg.org/whostyles/whostyles/issues"
+    }
+}

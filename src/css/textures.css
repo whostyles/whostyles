@@ -1,0 +1,250 @@
+/* Whostyle v2.0 - Textures (32 Patterns) */
+/* Variables used: --ws-bg (background color), --ws-texture (pattern color) */
+
+.ws-texture-none {
+    /* 0: none */
+    background-image: none;
+}
+
+.ws-texture-noise {
+    /* 1: noise - approximated via repeating radial gradient to keep it CSS-native without images */
+    background-image: repeating-radial-gradient(
+        circle at 17% 32%, var(--ws-texture), transparent 1px
+    ), repeating-radial-gradient(
+        circle at 83% 68%, var(--ws-texture), transparent 1px
+    );
+    background-size: 8px 8px;
+}
+
+.ws-texture-stripes-v {
+    /* 2: stripes-v */
+    background-image: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent 10px,
+        var(--ws-texture) 10px,
+        var(--ws-texture) 20px
+    );
+}
+
+.ws-texture-stripes-h {
+    /* 3: stripes-h */
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 10px,
+        var(--ws-texture) 10px,
+        var(--ws-texture) 20px
+    );
+}
+
+.ws-texture-stripes-d-right {
+    /* 4: stripes-d-right */
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        var(--ws-texture) 10px,
+        var(--ws-texture) 20px
+    );
+}
+
+.ws-texture-stripes-d-left {
+    /* 5: stripes-d-left */
+    background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 10px,
+        var(--ws-texture) 10px,
+        var(--ws-texture) 20px
+    );
+}
+
+.ws-texture-pinstripes {
+    /* 6: pinstripes */
+    background-image: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent 19px,
+        var(--ws-texture) 19px,
+        var(--ws-texture) 20px
+    );
+}
+
+.ws-texture-wavy-lines {
+    /* 7: wavy-lines (approximation) */
+    background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 2px),
+                      radial-gradient(circle at 10px 30px, var(--ws-texture) 2px, transparent 2px);
+    background-size: 20px 40px;
+    background-position: 0 0, 10px 20px;
+}
+
+.ws-texture-zigzag-lines {
+    /* 8: zigzag-lines */
+    background: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%) -10px 0,
+                linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%) -10px 0,
+                linear-gradient(315deg, var(--ws-texture) 25%, transparent 25%),
+                linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%);
+    background-size: 20px 20px;
+}
+
+.ws-texture-grid-standard {
+    /* 9: grid-standard */
+    background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.ws-texture-grid-fine {
+    /* 10: grid-fine */
+    background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px);
+    background-size: 5px 5px;
+}
+
+.ws-texture-grid-isometric {
+    /* 11: grid-isometric */
+    background-image: linear-gradient(30deg, var(--ws-texture) 1px, transparent 1px),
+                      linear-gradient(150deg, var(--ws-texture) 1px, transparent 1px);
+    background-size: 20px 34px;
+}
+
+.ws-texture-crosses {
+    /* 12: crosses */
+    background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px),
+                      linear-gradient(var(--ws-texture) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 20px 20px;
+    background-position: 10px 10px, 0 10px, 10px 0;
+}
+
+.ws-texture-crosshatch {
+    /* 13: crosshatch */
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, var(--ws-texture) 5px, var(--ws-texture) 6px),
+                      repeating-linear-gradient(-45deg, transparent, transparent 5px, var(--ws-texture) 5px, var(--ws-texture) 6px);
+}
+
+.ws-texture-checkerboard {
+    /* 14: checkerboard */
+    background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)),
+                      linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture));
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+}
+
+.ws-texture-checkerboard-tilt {
+    /* 15: checkerboard-tilt */
+    background-image: repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)),
+                      repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture));
+    background-position: 0 0, 10px 10px;
+    background-size: 28px 28px;
+}
+
+.ws-texture-triangles {
+    /* 16: triangles */
+    background-image: linear-gradient(45deg, var(--ws-texture) 50%, transparent 50%);
+    background-size: 20px 20px;
+}
+
+.ws-texture-diamonds {
+    /* 17: diamonds */
+    background-image: linear-gradient(45deg, transparent 25%, var(--ws-texture) 25%, var(--ws-texture) 50%, transparent 50%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture));
+    background-size: 20px 20px;
+}
+
+.ws-texture-argyle {
+    /* 18: argyle */
+    background-image: repeating-linear-gradient(120deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 11px),
+                      repeating-linear-gradient(60deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 11px);
+}
+
+.ws-texture-honeycomb {
+    /* 19: honeycomb */
+    background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 3px);
+    background-size: 20px 20px;
+}
+
+.ws-texture-chevron {
+    /* 20: chevron */
+    background-image: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%),
+                      linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%);
+    background-size: 20px 20px;
+}
+
+.ws-texture-houndstooth {
+    /* 21: houndstooth */
+    background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)),
+                      linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture));
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+}
+
+.ws-texture-brick-wall {
+    /* 22: brick-wall */
+    background-image: linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px),
+                      linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px),
+                      linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px),
+                      linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px);
+    background-size: 58px 58px;
+    background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px;
+}
+
+.ws-texture-dots-sparse {
+    /* 23: dots-sparse */
+    background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px);
+    background-size: 20px 20px;
+}
+
+.ws-texture-polka-dots {
+    /* 24: polka-dots */
+    background-image: radial-gradient(circle, var(--ws-texture) 6px, transparent 6.5px);
+    background-size: 30px 30px;
+}
+
+.ws-texture-circles-concentric {
+    /* 25: circles-concentric */
+    background-image: repeating-radial-gradient(circle, transparent, transparent 4px, var(--ws-texture) 4px, var(--ws-texture) 5px);
+}
+
+.ws-texture-scallop {
+    /* 26: scallop */
+    background-image: radial-gradient(circle at 100% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent),
+                      radial-gradient(circle at 0% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+}
+
+.ws-texture-waves {
+    /* 27: waves */
+    background-image: radial-gradient(circle at 50% 100%, var(--ws-texture) 25%, transparent 26%);
+    background-size: 20px 20px;
+}
+
+.ws-texture-woven {
+    /* 28: woven */
+    background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)),
+                      linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture));
+    background-size: 10px 10px;
+    background-position: 0 0, 5px 5px;
+}
+
+.ws-texture-denim {
+    /* 29: denim */
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 1px, var(--ws-texture) 1px, var(--ws-texture) 2px),
+                      repeating-linear-gradient(-45deg, transparent, transparent 1px, var(--ws-texture) 1px, var(--ws-texture) 2px);
+    background-size: 6px 6px;
+}
+
+.ws-texture-tartan {
+    /* 30: tartan */
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, var(--ws-texture) 20px, var(--ws-texture) 22px),
+                      repeating-linear-gradient(90deg, transparent, transparent 20px, var(--ws-texture) 20px, var(--ws-texture) 22px);
+}
+
+.ws-texture-confetti {
+    /* 31: confetti */
+    background-image: radial-gradient(circle at 20% 30%, var(--ws-texture) 2px, transparent 2px),
+                      radial-gradient(circle at 80% 40%, var(--ws-texture) 3px, transparent 3px),
+                      radial-gradient(circle at 40% 80%, var(--ws-texture) 2px, transparent 2px);
+    background-size: 30px 30px;
+}

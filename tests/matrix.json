@@ -1,0 +1,89 @@
+[
+  {
+    "name": "Zero State (All 0s)",
+    "input": {
+      "config": {
+        "typography": 0,
+        "transform": 0,
+        "align": 0,
+        "list": 0,
+        "border_style": 0,
+        "bg_texture": 0,
+        "border_width": 0,
+        "border_radius": 0,
+        "shadow_offset": 0,
+        "shadow_blur": 0,
+        "letter_spacing": 0
+      },
+      "colors": {
+        "light_bg": "#000000",
+        "light_text": "#000000",
+        "light_accent": "#000000",
+        "light_texture": "#000000",
+        "dark_bg": "#000000",
+        "dark_text": "#000000",
+        "dark_accent": "#000000",
+        "dark_texture": "#000000"
+      }
+    },
+    "hash": "{ws2:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}"
+  },
+  {
+    "name": "Max State (All Max)",
+    "input": {
+      "config": {
+        "typography": 27,
+        "transform": 3,
+        "align": 3,
+        "list": 4,
+        "border_style": 9,
+        "bg_texture": 31,
+        "border_width": 6,
+        "border_radius": 16,
+        "shadow_offset": 8,
+        "shadow_blur": 8,
+        "letter_spacing": 25
+      },
+      "colors": {
+        "light_bg": "#ffffff",
+        "light_text": "#ffffff",
+        "light_accent": "#ffffff",
+        "light_texture": "#ffffff",
+        "dark_bg": "#ffffff",
+        "dark_text": "#ffffff",
+        "dark_accent": "#ffffff",
+        "dark_texture": "#ffffff"
+      }
+    },
+    "hash": "{ws2:__pYTnC________________________________}"
+  },
+  {
+    "name": "Typical State 1",
+    "input": {
+      "config": {
+        "typography": 1,
+        "transform": 0,
+        "align": 0,
+        "list": 0,
+        "border_style": 4,
+        "bg_texture": 9,
+        "border_width": 1,
+        "border_radius": 4,
+        "shadow_offset": 5,
+        "shadow_blur": 4,
+        "letter_spacing": 5
+      },
+      "colors": {
+        "light_bg": "#f8f9fa",
+        "light_text": "#212529",
+        "light_accent": "#0d6efd",
+        "light_texture": "#e9ecef",
+        "dark_bg": "#212529",
+        "dark_text": "#f8f9fa",
+        "dark_accent": "#0d6efd",
+        "dark_texture": "#343a40"
+      }
+    },
+    "hash": "{ws2:BaU0cjA-Pn6ISUpDW796ezvISUp-Pn6DW79NDpA}"
+  }
+]

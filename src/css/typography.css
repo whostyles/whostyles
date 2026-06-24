@@ -1,0 +1,35 @@
+/* Whostyle v2.0 - Typography Stacks */
+
+/* Sans-Serif (0-9) */
+.ws-typography-system-ui  { font-family: system-ui, sans-serif; }
+.ws-typography-segoe-roboto  { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.ws-typography-helvetica-neue  { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.ws-typography-verdana  { font-family: Verdana, Geneva, sans-serif; }
+.ws-typography-trebuchet  { font-family: "Trebuchet MS", "Lucida Grande", sans-serif; }
+.ws-typography-tahoma  { font-family: Tahoma, Geneva, sans-serif; }
+.ws-typography-century-gothic  { font-family: "Century Gothic", Tw Cen MT, sans-serif; }
+.ws-typography-franklin-gothic  { font-family: "Franklin Gothic Medium", "Arial Narrow", sans-serif; }
+.ws-typography-gill-sans  { font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif; }
+.ws-typography-arial-rounded  { font-family: "Arial Rounded MT Bold", "Helvetica Rounded", sans-serif; }
+
+/* Serif (10-19) */
+.ws-typography-georgia { font-family: Georgia, serif; }
+.ws-typography-times-new-roman { font-family: "Times New Roman", Times, serif; }
+.ws-typography-garamond { font-family: Garamond, "Hoefler Text", "Times New Roman", serif; }
+.ws-typography-palatino { font-family: Palatino, "Palatino Linotype", "Book Antiqua", serif; }
+.ws-typography-baskerville { font-family: Baskerville, "Baskerville Old Face", "Hoefler Text", serif; }
+.ws-typography-bookman { font-family: "Bookman Old Style", Bookman, URW Bookman L, serif; }
+.ws-typography-cambria { font-family: Cambria, Georgia, serif; }
+.ws-typography-didot { font-family: Didot, "Didot LT STD", "Hoefler Text", serif; }
+.ws-typography-bodoni { font-family: "Bodoni MT", Didot, "Hoefler Text", serif; }
+.ws-typography-rockwell { font-family: "Rockwell", "Courier Bold", Courier, serif; }
+
+/* Monospace (20-27) */
+.ws-typography-monospace { font-family: ui-monospace, monospace; }
+.ws-typography-consolas { font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace; }
+.ws-typography-courier-new { font-family: "Courier New", Courier, monospace; }
+.ws-typography-monaco { font-family: Monaco, Consolas, "Lucida Console", monospace; }
+.ws-typography-lucida-console { font-family: "Lucida Console", "Lucida Sans Typewriter", monospace; }
+.ws-typography-andale-mono { font-family: "Andale Mono", "AndaleMono", monospace; }
+.ws-typography-sf-mono { font-family: "SF Mono", Menlo, Monaco, Consolas, monospace; }
+.ws-typography-cascadia-code { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; }
