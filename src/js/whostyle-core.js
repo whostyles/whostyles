@@ -1,6 +1,6 @@
 export const WhostyleCore = {
-    ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
-    ALPHABET_MAP: Object.fromEntries('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'.split('').map((c, i) => [c, i])),
+    ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.',
+    ALPHABET_MAP: Object.fromEntries('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.'.split('').map((c, i) => [c, i])),
 
     RADIXES: {
         typography: 28,
@@ -112,7 +112,7 @@ export const WhostyleCore = {
     },
 
     decode(hash) {
-        const match = hash.match(/^\{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})\}$/);
+        const match = hash.match(/^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$/);
         if (!match) return null;
 
         const configB64 = match[1];
@@ -153,7 +153,7 @@ export const WhostyleCore = {
     extractFromHeaders(headers) {
         if (!headers) return null;
         const headerName = 'x-whostyle';
-        const regex = /^\{ws1:[A-Za-z0-9\-_]{40}\}$/;
+        const regex = /^\{ws1:[A-Za-z0-9\-.]{40}\}$/;
         
         // Handle Headers object (Fetch API)
         if (typeof headers.get === 'function') {
@@ -171,7 +171,7 @@ export const WhostyleCore = {
 
     extractFromTwtxt(feedString) {
         if (!feedString || typeof feedString !== 'string') return null;
-        const regex = /^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-_]{40}\})\s*$/i;
+        const regex = /^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$/i;
         const lines = feedString.split('\n');
         for (const line of lines) {
             const trimmed = line.trim();
@@ -186,13 +186,13 @@ export const WhostyleCore = {
     extract(htmlString) {
         if (!htmlString || typeof htmlString !== 'string') return null;
 
-        let m = htmlString.match(/<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-_]{40}\})["']?/i);
+        let m = htmlString.match(/<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{40}\})["']?/i);
         if (m) return m[1];
 
-        m = htmlString.match(/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})"/i);
+        m = htmlString.match(/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"/i);
         if (m) return m[1];
 
-        const inlineRegex = /(\{ws1:[A-Za-z0-9\-_]{40}\})/g;
+        const inlineRegex = /(\{ws1:[A-Za-z0-9\-.]{40}\})/g;
         let match;
         while ((match = inlineRegex.exec(htmlString)) !== null) {
             if (match.index > 0 && htmlString[match.index - 1] === '\\') continue;
@@ -204,7 +204,7 @@ export const WhostyleCore = {
 
     clean(htmlString) {
         // Replaces raw {ws1:...} instances that are not safely inside quotes of known attributes.
-        const regex = /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})/gi;
+        const regex = /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})/gi;
         return htmlString.replace(regex, (match, protectedBlock, escapedHash, inlineHash) => {
             if (protectedBlock) return match;
             if (escapedHash) return escapedHash; // remove backslash

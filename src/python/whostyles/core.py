@@ -2,7 +2,7 @@ import re
 from typing import Optional, Dict, Any
 
 class Whostyles:
-    ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+    ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.'
     
     RADIXES = {
         'typography': 28,
@@ -83,7 +83,7 @@ class Whostyles:
 
     @classmethod
     def decode(cls, hash_str: str) -> Optional[Dict[str, Any]]:
-        match = re.match(r'^\{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})\}$', hash_str)
+        match = re.match(r'^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$', hash_str)
         if not match:
             return None
         
@@ -149,7 +149,7 @@ class Whostyles:
         
         for k, val in headers.items():
             if k.lower() == 'x-whostyle':
-                if re.match(r'^\{ws1:[A-Za-z0-9\-_]{40}\}$', val):
+                if re.match(r'^\{ws1:[A-Za-z0-9\-.]{40}\}$', val):
                     return val.strip()
         return None
 
@@ -162,7 +162,7 @@ class Whostyles:
             if not line or line[0] != '#':
                 continue
             content = line[1:].lstrip()
-            m = re.match(r'^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-_]{40}\})\s*$', content, re.IGNORECASE)
+            m = re.match(r'^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$', content, re.IGNORECASE)
             if m:
                 return m.group(1)
         return None
@@ -173,15 +173,15 @@ class Whostyles:
             return None
             
         # 1. Meta
-        m = re.search(r'<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-_]{40}\})["\']?', html, re.IGNORECASE)
+        m = re.search(r'<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-.]{40}\})["\']?', html, re.IGNORECASE)
         if m: return m.group(1)
 
         # 2. JSON-LD
-        m = re.search(r'"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})"', html, re.IGNORECASE)
+        m = re.search(r'"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"', html, re.IGNORECASE)
         if m: return m.group(1)
 
         # 3. Inline
-        for m in re.finditer(r'(\{ws1:[A-Za-z0-9\-_]{40}\})', html):
+        for m in re.finditer(r'(\{ws1:[A-Za-z0-9\-.]{40}\})', html):
             if m.start() > 0 and html[m.start() - 1] == '\\':
                 continue
             return m.group(1)
@@ -197,7 +197,7 @@ class Whostyles:
                 return match.group(2)
             return ''
             
-        pattern = re.compile(r'((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})', re.IGNORECASE)
+        pattern = re.compile(r'((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})', re.IGNORECASE)
         return pattern.sub(repl, html)
 
     @classmethod

@@ -1,7 +1,7 @@
 use regex::Regex;
 use std::collections::HashMap;
 
-const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.";
 
 const RADIXES: &[(&str, u64)] = &[
     ("typography", 28),
@@ -105,7 +105,7 @@ pub fn calculate_checksum(config: &HashMap<String, u64>) -> u64 {
 }
 
 pub fn decode(hash_str: &str) -> Result<Decoded, String> {
-    let re = Regex::new(r"^\{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})\}$").unwrap();
+    let re = Regex::new(r"^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$").unwrap();
     let caps = re.captures(hash_str).ok_or("Invalid hash format")?;
 
     let config_b64 = caps.get(1).unwrap().as_str();
@@ -171,7 +171,7 @@ pub fn encode(config: &HashMap<String, u64>, colors: &HashMap<String, String>) -
 }
 
 pub fn extract_from_headers(headers: &HashMap<String, String>) -> Option<String> {
-    let re = Regex::new(r"^\{ws1:[A-Za-z0-9\-_]{40}\}$").unwrap();
+    let re = Regex::new(r"^\{ws1:[A-Za-z0-9\-.]{40}\}$").unwrap();
     for (k, v) in headers {
         if k.to_lowercase() == "x-whostyle" {
             let val = v.trim();
@@ -187,7 +187,7 @@ pub fn extract_from_twtxt(feed_string: &str) -> Option<String> {
     if feed_string.is_empty() {
         return None;
     }
-    let re = Regex::new(r"(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-_]{40}\})\s*$").unwrap();
+    let re = Regex::new(r"(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$").unwrap();
     for line in feed_string.lines() {
         let trimmed = line.trim();
         if trimmed.is_empty() || !trimmed.starts_with('#') {
@@ -203,19 +203,19 @@ pub fn extract_from_twtxt(feed_string: &str) -> Option<String> {
 
 pub fn extract(html: &str) -> Option<String> {
     // 1. Meta Tag
-    let re_meta = Regex::new(r#"(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-_]{40}\})["']?"#).unwrap();
+    let re_meta = Regex::new(r#"(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{40}\})["']?"#).unwrap();
     if let Some(caps) = re_meta.captures(html) {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }
 
     // 2. JSON-LD
-    let re_json = Regex::new(r#"(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})""#).unwrap();
+    let re_json = Regex::new(r#"(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})""#).unwrap();
     if let Some(caps) = re_json.captures(html) {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }
 
     // 3. Inline
-    let re_inline = Regex::new(r"(\{ws1:[A-Za-z0-9\-_]{40}\})").unwrap();
+    let re_inline = Regex::new(r"(\{ws1:[A-Za-z0-9\-.]{40}\})").unwrap();
     let bytes = html.as_bytes();
     for mat in re_inline.find_iter(html) {
         if mat.start() > 0 && bytes[mat.start() - 1] == b'\\' {
@@ -228,7 +228,7 @@ pub fn extract(html: &str) -> Option<String> {
 }
 
 pub fn clean(html: &str) -> String {
-    let re = Regex::new(r#"(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})"#).unwrap();
+    let re = Regex::new(r#"(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})"#).unwrap();
     re.replace_all(html, |caps: &regex::Captures| {
         if let Some(m) = caps.get(1) {
             return m.as_str().to_string();

@@ -3,7 +3,7 @@
 namespace Whostyles;
 
 class Whostyles {
-    private const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    private const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.';
     private static $ALPHABET_MAP = null;
 
     private static function getAlphabetMap(): array {
@@ -90,7 +90,7 @@ class Whostyles {
     }
 
     public static function decode(string $hash): ?array {
-        if (!preg_match('/^\{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})\}$/', $hash, $matches)) {
+        if (!preg_match('/^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$/', $hash, $matches)) {
             return null;
         }
 
@@ -176,7 +176,7 @@ class Whostyles {
 
     public static function extractFromHeaders(?array $headers = null): ?string {
         if ($headers === null) {
-            if (isset($_SERVER['HTTP_X_WHOSTYLE']) && preg_match('/^\{ws1:[A-Za-z0-9\-_]{40}\}$/', trim($_SERVER['HTTP_X_WHOSTYLE']))) {
+            if (isset($_SERVER['HTTP_X_WHOSTYLE']) && preg_match('/^\{ws1:[A-Za-z0-9\-.]{40}\}$/', trim($_SERVER['HTTP_X_WHOSTYLE']))) {
                 return trim($_SERVER['HTTP_X_WHOSTYLE']);
             }
             // For environments where getallheaders() is available
@@ -189,7 +189,7 @@ class Whostyles {
 
         if (is_array($headers)) {
             foreach ($headers as $key => $value) {
-                if (strtolower($key) === 'x-whostyle' && is_string($value) && preg_match('/^\{ws1:[A-Za-z0-9\-_]{40}\}$/', trim($value))) {
+                if (strtolower($key) === 'x-whostyle' && is_string($value) && preg_match('/^\{ws1:[A-Za-z0-9\-.]{40}\}$/', trim($value))) {
                     return trim($value);
                 }
             }
@@ -203,7 +203,7 @@ class Whostyles {
             $line = trim($line);
             if (strlen($line) === 0 || $line[0] !== '#') continue;
             $content = ltrim(substr($line, 1));
-            if (preg_match('/^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-_]{40}\})\s*$/i', $content, $m)) {
+            if (preg_match('/^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$/i', $content, $m)) {
                 return $m[1];
             }
         }
@@ -212,17 +212,17 @@ class Whostyles {
 
     public static function extract(string $html): ?string {
         // 1. Meta Tag
-        if (preg_match('/<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-_]{40}\})["\']?/i', $html, $m)) {
+        if (preg_match('/<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-.]{40}\})["\']?/i', $html, $m)) {
             return $m[1];
         }
 
         // 2. JSON-LD
-        if (preg_match('/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})"/i', $html, $m)) {
+        if (preg_match('/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"/i', $html, $m)) {
             return $m[1];
         }
 
         // 3. Inline Text
-        if (preg_match_all('/(\{ws1:[A-Za-z0-9\-_]{40}\})/', $html, $matches, PREG_OFFSET_CAPTURE)) {
+        if (preg_match_all('/(\{ws1:[A-Za-z0-9\-.]{40}\})/', $html, $matches, PREG_OFFSET_CAPTURE)) {
             foreach ($matches[1] as $match) {
                 $hash = $match[0];
                 $offset = $match[1];
@@ -238,7 +238,7 @@ class Whostyles {
 
     public static function clean(string $html): string {
         return preg_replace_callback(
-            '/((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})/i',
+            '/((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})/i',
             function ($matches) {
                 if (!empty($matches[1])) {
                     return $matches[1]; // keep protected block

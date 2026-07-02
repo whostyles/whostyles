@@ -98,7 +98,7 @@ Copyright Notice
    {
      "@context": "https://schema.org",
      "@type": "Article",
-     "whostyle": "{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}"
+     "whostyle": "{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}"
    }
    </script>
 
@@ -109,7 +109,7 @@ Copyright Notice
    directly in the body text.
    
    Host engines MUST scan the raw text for the regex pattern: 
-   \{ws1:[A-Za-z0-9\-_]{40}\}
+   \{ws1:[A-Za-z0-9\-.]{40}\}
    
    Inline Escape Sequence: If a backslash `\` precedes the hash (e.g., 
    `\{ws1:...}`), parsers MUST ignore it. This serves as an escape 
@@ -152,7 +152,7 @@ Copyright Notice
    # nick = user
    # url = https://example.com/twtxt.txt
    # avatar = https://example.com/avatar.png
-   # whostyle = {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}
+   # whostyle = {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}
 
    Note: twtxt feed discovery is a standalone extraction mechanism,
    independent of the HTML discovery precedence chain (Section 2.1). 
@@ -179,7 +179,7 @@ Copyright Notice
    to this HTML cleanup regex.
 
    Regex Pattern:
-   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-_]{40}\})/i
+   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-.]{40}\})/i
 
    Replacement Rule:
    If Group 1 matches, replace with Group 1 (preserve meta tag).
@@ -191,11 +191,6 @@ Copyright Notice
    When an escaped hash (e.g., `\{ws1:...}`) is encountered, the cleaning 
    process MUST remove the preceding backslash `\`, leaving the raw 
    `{ws1:...}` hash visible in the rendered output.
-
-   Markdown Interference: When extracting from text that will undergo 
-   Markdown processing, parsers SHOULD extract the hash before rendering, 
-   as the `_` character in the Base64 payload can be incorrectly 
-   interpreted as an emphasis delimiter.
 
 3.  Hash Specification
 
@@ -211,10 +206,10 @@ Copyright Notice
 3.1. Base64 Alphabet
 
    The encoding MUST strictly use the following 64-character alphabet:
-   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_
+   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.
 
    Each character maps to its zero-indexed position in this string
-   (A=0, B=1, ..., Z=25, a=26, ..., z=51, 0=52, ..., 9=61, -=62, _=63).
+   (A=0, B=1, ..., Z=25, a=26, ..., z=51, 0=52, ..., 9=61, -=62, .=63).
    The 40-character Base64 payload is strictly case-sensitive.
 
 3.2. Version Extensibility
@@ -503,7 +498,7 @@ Appendix A: Normative Test Vector
    decode the following canonical Whostyle V1 hash:
 
    Input Hash:
-   {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}
+   {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}
 
    1. Configuration Block ("tP3ClmkB")
       Decodes to State Integer: 6913371370477
@@ -524,7 +519,7 @@ Appendix A: Normative Test Vector
       - shadow_opacity: 1
       - checksum: 2
 
-   2. Colors Block ("9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE")
+   2. Colors Block ("9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE")
       Decodes to 8 RGB Colors:
       1. Light Background: "9fXw" -> #f5f5f0
       2. Light Text: "Ghou" -> #1a1a2e
@@ -532,7 +527,7 @@ Appendix A: Normative Test Vector
       4. Light Texture: "3d3d" -> #dddddd
       5. Dark Background: "Ghou" -> #1a1a2e
       6. Dark Text: "9fXw" -> #f5f5f0
-      7. Dark Accent: "Zqr_" -> #66aaff
+      7. Dark Accent: "Zqr." -> #66aaff
       8. Dark Texture: "MzNE" -> #333344
 
    WCAG Contrast Verification:

@@ -22,6 +22,10 @@ Whostyle abstracts cosmetic styling into non-executable design data tokens encod
 4. **Data Integrity Checksum:** The hash includes a mathematical modulo-6 checksum to prevent accidental configuration corruption during syndication.
 5. **Ultra-Compact Hash:** The entire configuration and color scheme are packed into a 46-character hash (`{ws1:...}`), allowing injection directly into HTTP Headers, meta tags, or text.
 
+### Base64 Alphabet Rationale
+
+Whostyle utilizes a modified Base64 alphabet (`A-Za-z0-9-.`) where the 64th character is a period (`.`) instead of the traditional underscore (`_`) or slash (`/`). This deliberate change ensures maximum compatibility with Markdown and other rich-text engines, preventing the hash string from inadvertently triggering inline formatting (e.g., italics) when syndicated across platforms that don't perfectly isolate text blocks.
+
 ---
 
 ## Discovery Mechanism & Precedence
@@ -51,7 +55,7 @@ require 'src/php/Whostyles.php';
 
 // Extract the headers if available (e.g. from getallheaders())
 $headers = [
-    'X-Whostyle' => '{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}'
+    'X-Whostyle' => '{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}'
 ];
 
 // 1. Discover the Hash (Automatically handles precedence and decoding)
@@ -81,7 +85,7 @@ To make these variables work seamlessly, simply link our pre-compiled generic st
 ### Manual Hash Removal (Regex)
 If you are not using our libraries, you can clean the presentation layer manually by using the following Regular Expression (it targets inline hashes but explicitly protects the hash inside a `<meta>` tag):
 ```regex
-/((?:<|&lt;)meta[\s\S]*?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?content=(?:["']|&quot;|&#39;|&#039;)?{ws1:[A-Za-z0-9\-_]{40}}(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?(?:>|&gt;))|({ws1:[A-Za-z0-9\-_]{40}})/i
+/((?:<|&lt;)meta[\s\S]*?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?content=(?:["']|&quot;|&#39;|&#039;)?{ws1:[A-Za-z0-9\-.]{40}}(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?(?:>|&gt;))|({ws1:[A-Za-z0-9\-.]{40}})/i
 ```
 Replace matching groups: if Group 1 matches, keep Group 1. If Group 2 matches, replace with an empty string.
 

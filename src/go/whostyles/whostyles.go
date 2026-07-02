@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+const Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-."
 
 var radixes = []struct {
 	Key   string
@@ -118,7 +118,7 @@ func CalculateChecksum(config Config) uint64 {
 }
 
 func Decode(hashStr string) (*Decoded, error) {
-	pattern := regexp.MustCompile(`^\{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})\}$`)
+	pattern := regexp.MustCompile(`^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$`)
 	matches := pattern.FindStringSubmatch(hashStr)
 	if matches == nil {
 		return nil, errors.New("invalid hash format")
@@ -207,7 +207,7 @@ func ExtractFromHeaders(headers map[string][]string) string {
 	if headers == nil {
 		return ""
 	}
-	hashRegex := regexp.MustCompile(`^\{ws1:[A-Za-z0-9\-_]{40}\}$`)
+	hashRegex := regexp.MustCompile(`^\{ws1:[A-Za-z0-9\-.]{40}\}$`)
 	for k, v := range headers {
 		if strings.ToLower(k) == "x-whostyle" && len(v) > 0 {
 			val := strings.TrimSpace(v[0])
@@ -223,7 +223,7 @@ func ExtractFromTwtxt(feedString string) string {
 	if feedString == "" {
 		return ""
 	}
-	hashRegex := regexp.MustCompile(`(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-_]{40}\})\s*$`)
+	hashRegex := regexp.MustCompile(`(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$`)
 	lines := strings.Split(feedString, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -240,19 +240,19 @@ func ExtractFromTwtxt(feedString string) string {
 
 func Extract(html string) string {
 	// 1. Meta Tag
-	reMeta := regexp.MustCompile(`(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-_]{40}\})["']?`)
+	reMeta := regexp.MustCompile(`(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{40}\})["']?`)
 	if m := reMeta.FindStringSubmatch(html); len(m) > 1 {
 		return m[1]
 	}
 
 	// 2. JSON-LD
-	reJSON := regexp.MustCompile(`(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})"`)
+	reJSON := regexp.MustCompile(`(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"`)
 	if m := reJSON.FindStringSubmatch(html); len(m) > 1 {
 		return m[1]
 	}
 
 	// 3. Inline
-	reInline := regexp.MustCompile(`(\{ws1:[A-Za-z0-9\-_]{40}\})`)
+	reInline := regexp.MustCompile(`(\{ws1:[A-Za-z0-9\-.]{40}\})`)
 	matches := reInline.FindAllStringSubmatchIndex(html, -1)
 	for _, match := range matches {
 		if match[0] > 0 && html[match[0]-1] == '\\' {
@@ -265,7 +265,7 @@ func Extract(html string) string {
 }
 
 func Clean(html string) string {
-	reClean := regexp.MustCompile(`(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})`)
+	reClean := regexp.MustCompile(`(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})`)
 	return reClean.ReplaceAllStringFunc(html, func(match string) string {
 		submatches := reClean.FindStringSubmatch(match)
 		if len(submatches) > 1 && submatches[1] != "" {
