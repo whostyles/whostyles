@@ -48,6 +48,12 @@ Copyright Notice
    the styling data Hash. This can be done at the protocol level (HTTP), 
    the document head (Meta, Link, JSON-LD), or the document body (Inline).
 
+   Identifier Case-Insensitivity: Across all discovery mechanisms (HTTP 
+   headers, HTML attributes, JSON keys, twtxt fields, and ActivityPub 
+   properties), the identifier string "whostyle" (or "X-Whostyle") MUST 
+   be treated as case-insensitive by parsers. The Base64 hash payload 
+   itself, however, remains strictly case-sensitive.
+
 2.1. Discovery Precedence
 
    To prevent malicious actors from injecting styles that override the 
