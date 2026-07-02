@@ -1,0 +1,79 @@
+name: Automated Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-js:
+    name: JavaScript Tests
+    runs-on: codeberg-tiny
+    steps:
+      - name: Checkout code
+        uses: https://github.com/actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Node.js
+        uses: https://github.com/actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 20
+
+      - name: Execute JS Tests
+        run: node tests/verify_core.js
+
+  test-php:
+    name: PHP Tests
+    runs-on: codeberg-tiny
+    steps:
+      - name: Checkout code
+        uses: https://github.com/actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup PHP
+        uses: https://github.com/shivammathur/setup-php@c665c7a15b5295c24882e66f84d08182410a58ee
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Execute PHP Tests
+        run: php tests/verify.php
+
+  test-python:
+    name: Python Tests
+    runs-on: codeberg-tiny
+    steps:
+      - name: Checkout code
+        uses: https://github.com/actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Python
+        uses: https://github.com/actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Execute Python Tests
+        run: python tests/verify_python.py
+
+  test-go:
+    name: Go Tests
+    runs-on: codeberg-tiny
+    steps:
+      - name: Checkout code
+        uses: https://github.com/actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Go
+        uses: https://github.com/actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Execute Go Tests
+        run: go run tests/verify_go.go
+
+  test-rust:
+    name: Rust Tests
+    runs-on: codeberg-tiny
+    steps:
+      - name: Checkout code
+        uses: https://github.com/actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Execute Rust Tests
+        run: cd src/rust/whostyles && cargo test

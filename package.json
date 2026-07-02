@@ -1,0 +1,32 @@
+{
+  "name": "@whostyles/whostyles",
+  "version": "1.0.0",
+  "description": "Whostyle V1: Structured, data-driven format for syndicating personal typographic and cosmetic styles",
+  "main": "src/js/whostyle-core.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/js/whostyle-core.js",
+    "./dom": "./src/js/whostyle-dom.js"
+  },
+  "scripts": {
+    "test": "node tests/verify_core.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://codeberg.org/whostyles/whostyles.git"
+  },
+  "keywords": [
+    "whostyle",
+    "indieweb",
+    "fediverse",
+    "css",
+    "styling",
+    "syndication"
+  ],
+  "author": "Lumen Freitas",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://codeberg.org/whostyles/whostyles/issues"
+  },
+  "homepage": "https://codeberg.org/whostyles/whostyles#readme"
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whostyle Validator (v1.0)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            font-size: 2.5rem;
+            background: -webkit-linear-gradient(#60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            width: 90%;
+            max-width: 1400px;
+            padding-bottom: 3rem;
+        }
+
+        .panel {
+            flex: 1;
+            min-width: 350px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h2 {
+            font-family: 'Outfit', sans-serif;
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 150px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: #10b981;
+            font-family: 'monospace';
+            font-size: 0.95rem;
+            outline: none;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        #result {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        #result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: #fca5a5;
+            display: block;
+        }
+
+        #result.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: #6ee7b7;
+            display: block;
+        }
+        
+        pre {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Whostyle Validator</h1>
+        <p>Paste your Whostyle V1 Hash below to decode and validate it.</p>
+    </header>
+
+    <div class="container">
+        <!-- Input Panel -->
+        <div class="panel">
+            <h2>Input Data</h2>
+            <textarea id="hash_input" placeholder="Paste your hash here (e.g., {ws1:...})"></textarea>
+            <button class="btn" id="btn_validate">Validate Hash</button>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <h2>Validation Results</h2>
+            <div id="result">Waiting for input...</div>
+            <div id="decoded_output" style="display: none;">
+                <h3>Decoded Output</h3>
+                <pre id="json_output"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { WhostyleCore } from '../src/js/whostyle-core.js';
+
+        function showResult(isValid, message, data = null) {
+            const res = document.getElementById('result');
+            const output = document.getElementById('decoded_output');
+            const jsonOut = document.getElementById('json_output');
+            
+            res.className = isValid ? 'success' : 'error';
+            res.innerHTML = `<strong>${isValid ? '✅ Valid' : '❌ Invalid'}</strong>: ${message}`;
+            
+            if (data) {
+                output.style.display = 'block';
+                jsonOut.textContent = JSON.stringify(data, null, 2);
+            } else {
+                output.style.display = 'none';
+            }
+        }
+
+        document.getElementById('btn_validate').addEventListener('click', () => {
+            const input = document.getElementById('hash_input').value.trim();
+            if (!input) {
+                showResult(false, "Input cannot be empty.");
+                return;
+            }
+
+            let hashToDecode = input;
+            
+            // If it's a full HTML string, try to extract it
+            if (input.includes('<meta') || input.length > 45) {
+                const extracted = WhostyleCore.extract(input);
+                if (extracted) {
+                    hashToDecode = extracted;
+                } else {
+                    showResult(false, "Could not find a valid {ws1:...} hash in the input.");
+                    return;
+                }
+            }
+
+            try {
+                const decoded = WhostyleCore.decode(hashToDecode);
+                if (decoded) {
+                    showResult(true, `Successfully decoded Whostyle V1 hash.`, decoded);
+                } else {
+                    showResult(false, "Invalid hash format or checksum.");
+                }
+            } catch (e) {
+                showResult(false, "Decoding error: " + e.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whostyle Generator (v1.0)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        header { width: 100%; padding: 2rem 0; text-align: center; }
+        header h1 {
+            font-family: 'Outfit', sans-serif; margin: 0; font-size: 2.5rem;
+            background: -webkit-linear-gradient(#60a5fa, #a78bfa);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: flex; flex-direction: column; gap: 1.5rem; width: 90%; max-width: 1400px; padding-bottom: 3rem; align-items: stretch;
+        }
+
+        .panel {
+            flex: 1; min-width: 350px; background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .sticky-panel.scrolled > .panel-header { display: none; }
+        .sticky-panel.scrolled { padding-top: 1rem; padding-bottom: 1rem; }
+        
+        .toast-warning {
+            position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 100;
+            background: rgba(239, 68, 68, 0.95); border: 1px solid #ef4444; color: #fca5a5;
+            padding: 1rem; border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); font-size: 0.9rem; width: 90%; max-width: 600px; display: none;
+        }
+        
+        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+        .panel-header h2 { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        .panel>h2, .config-col>h2 { font-family: 'Outfit', sans-serif; margin-top: 0; font-size: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+
+        .sticky-panel { position: sticky; top: 1rem; z-index: 10; }
+        .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .token-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .control-group { margin-bottom: 1.2rem; display: flex; flex-direction: column; }
+        .control-row { display: flex; gap: 1rem; margin-bottom: 1.2rem; }
+        .control-row>div { flex: 1; }
+        .color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1; font-weight: 600; }
+
+        label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; color: #94a3b8; }
+        select, input[type="number"], input[type="text"], input[type="color"] {
+            width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2); color: white; font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.2s; box-sizing: border-box;
+        }
+        option { background-color: var(--bg-color); color: var(--text-color); }
+        select:focus, input:focus { border-color: var(--accent); }
+        .color-controls { display: flex; gap: 0.3rem; align-items: center; }
+        .color-controls input[type="color"] { padding: 0.3rem; height: 38px; flex: 1; min-width: 0; }
+        .btn-hsl { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); color: white; border-radius: 4px; height: 38px; width: 30px; cursor: pointer; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .btn-hsl:hover { background: rgba(255, 255, 255, 0.2); }
+        .c-ind { font-size: 0.8rem; margin-left: 0.3rem; }
+        input[type="color"] { padding: 0; height: 40px; cursor: pointer; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
+
+        /* Output Areas */
+        .output-section { margin-top: 2rem; }
+        .output-section h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .recommended-badge { background: #10b981; color: #064e3b; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
+        .instruction { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; }
+        .json-output { background: rgba(0, 0, 0, 0.4); padding: 1rem; border-radius: 8px; font-family: 'monospace'; font-size: 0.9rem; color: #10b981; white-space: pre-wrap; overflow-x: auto; margin-bottom: 1rem; }
+        .action-row { display: flex; gap: 1rem; }
+        .btn { flex: 1; padding: 0.8rem; background: var(--accent); color: white; text-align: center; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+        .btn.secondary { background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); }
+        .btn.secondary:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn:hover { background: var(--accent-hover); }
+        .btn:active { transform: scale(0.98); }
+        
+        /* Typography classes to match V1 spec */
+        .ws-typography-system-ui  { font-family: system-ui, sans-serif; }
+        .ws-typography-segoe-roboto  { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .ws-typography-helvetica-neue  { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+        .ws-typography-verdana  { font-family: Verdana, Geneva, sans-serif; }
+        .ws-typography-trebuchet  { font-family: "Trebuchet MS", "Lucida Grande", sans-serif; }
+        .ws-typography-tahoma  { font-family: Tahoma, Geneva, sans-serif; }
+        .ws-typography-century-gothic  { font-family: "Century Gothic", Tw Cen MT, sans-serif; }
+        .ws-typography-franklin-gothic  { font-family: "Franklin Gothic Medium", "Arial Narrow", sans-serif; }
+        .ws-typography-gill-sans  { font-family: "Gill Sans", "Gill Sans MT", Calibri, sans-serif; }
+        .ws-typography-arial-rounded  { font-family: "Arial Rounded MT Bold", "Helvetica Rounded", sans-serif; }
+        .ws-typography-georgia { font-family: Georgia, serif; }
+        .ws-typography-times-new-roman { font-family: "Times New Roman", Times, serif; }
+        .ws-typography-garamond { font-family: Garamond, "Hoefler Text", "Times New Roman", serif; }
+        .ws-typography-palatino { font-family: Palatino, "Palatino Linotype", "Book Antiqua", serif; }
+        .ws-typography-baskerville { font-family: Baskerville, "Baskerville Old Face", "Hoefler Text", serif; }
+        .ws-typography-bookman { font-family: "Bookman Old Style", Bookman, URW Bookman L, serif; }
+        .ws-typography-cambria { font-family: Cambria, Georgia, serif; }
+        .ws-typography-didot { font-family: Didot, "Didot LT STD", "Hoefler Text", serif; }
+        .ws-typography-bodoni { font-family: "Bodoni MT", Didot, "Hoefler Text", serif; }
+        .ws-typography-rockwell { font-family: "Rockwell", "Courier Bold", Courier, serif; }
+        .ws-typography-monospace { font-family: ui-monospace, monospace; }
+        .ws-typography-consolas { font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace; }
+        .ws-typography-courier-new { font-family: "Courier New", Courier, monospace; }
+        .ws-typography-monaco { font-family: Monaco, Consolas, "Lucida Console", monospace; }
+        .ws-typography-lucida-console { font-family: "Lucida Console", "Lucida Sans Typewriter", monospace; }
+        .ws-typography-andale-mono { font-family: "Andale Mono", "AndaleMono", monospace; }
+        .ws-typography-sf-mono { font-family: "SF Mono", Menlo, Monaco, Consolas, monospace; }
+        .ws-typography-cascadia-code { font-family: "Cascadia Code", "Fira Code", Consolas, monospace; }
+        
+        /* Texture classes to match V1 spec */
+        .ws-texture-none { background-image: none; }
+        .ws-texture-noise { background-image: repeating-radial-gradient(circle at 17% 32%, var(--ws-texture), transparent 1px), repeating-radial-gradient(circle at 83% 68%, var(--ws-texture), transparent 1px); background-size: 8px 8px; }
+        .ws-texture-stripes-v { background-image: repeating-linear-gradient(to right, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
+        .ws-texture-stripes-h { background-image: repeating-linear-gradient(to bottom, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
+        .ws-texture-stripes-d-right { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
+        .ws-texture-stripes-d-left { background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
+        .ws-texture-pinstripes { background-image: repeating-linear-gradient(to right, transparent, transparent 19px, var(--ws-texture) 19px, var(--ws-texture) 20px); }
+        .ws-texture-wavy-lines { background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 2px), radial-gradient(circle at 10px 30px, var(--ws-texture) 2px, transparent 2px); background-size: 20px 40px; background-position: 0 0, 10px 20px; }
+        .ws-texture-zigzag-lines { background: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%) -10px 0, linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%) -10px 0, linear-gradient(315deg, var(--ws-texture) 25%, transparent 25%), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%); background-size: 20px 20px; }
+        .ws-texture-grid-standard { background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: 20px 20px; }
+        .ws-texture-grid-fine { background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: 5px 5px; }
+        .ws-texture-grid-isometric { background-image: linear-gradient(30deg, var(--ws-texture) 1px, transparent 1px), linear-gradient(150deg, var(--ws-texture) 1px, transparent 1px); background-size: 20px 34px; }
+        .ws-texture-crosses { background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px), linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: 20px 20px, 20px 20px, 20px 20px; background-position: 10px 10px, 0 10px, 10px 0; }
+        .ws-texture-crosshatch { background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, var(--ws-texture) 5px, var(--ws-texture) 6px), repeating-linear-gradient(-45deg, transparent, transparent 5px, var(--ws-texture) 5px, var(--ws-texture) 6px); }
+        .ws-texture-checkerboard { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+        .ws-texture-checkerboard-tilt { background-image: repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-position: 0 0, 10px 10px; background-size: 28px 28px; }
+        .ws-texture-triangles { background-image: linear-gradient(45deg, var(--ws-texture) 50%, transparent 50%); background-size: 20px 20px; }
+        .ws-texture-diamonds { background-image: linear-gradient(45deg, transparent 25%, var(--ws-texture) 25%, var(--ws-texture) 50%, transparent 50%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: 20px 20px; }
+        .ws-texture-argyle { background-image: repeating-linear-gradient(120deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 11px), repeating-linear-gradient(60deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 11px); }
+        .ws-texture-honeycomb { background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 3px); background-size: 20px 20px; }
+        .ws-texture-chevron { background-image: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%), linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%); background-size: 20px 20px; }
+        .ws-texture-houndstooth { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-position: 0 0, 10px 10px; background-size: 20px 20px; }
+        .ws-texture-brick-wall { background-image: linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px); background-size: 58px 58px; background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px; }
+        .ws-texture-dots-sparse { background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px); background-size: 20px 20px; }
+        .ws-texture-polka-dots { background-image: radial-gradient(circle, var(--ws-texture) 6px, transparent 6.5px); background-size: 30px 30px; }
+        .ws-texture-circles-concentric { background-image: repeating-radial-gradient(circle, transparent, transparent 4px, var(--ws-texture) 4px, var(--ws-texture) 5px); }
+        .ws-texture-scallop { background-image: radial-gradient(circle at 100% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent), radial-gradient(circle at 0% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent); background-size: 40px 40px; background-position: 0 0, 20px 20px; }
+        .ws-texture-waves { background-image: radial-gradient(circle at 50% 100%, var(--ws-texture) 25%, transparent 26%); background-size: 20px 20px; }
+        .ws-texture-woven { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+        .ws-texture-denim { background-image: repeating-linear-gradient(45deg, transparent, transparent 1px, var(--ws-texture) 1px, var(--ws-texture) 2px), repeating-linear-gradient(-45deg, transparent, transparent 1px, var(--ws-texture) 1px, var(--ws-texture) 2px); background-size: 6px 6px; }
+        .ws-texture-tartan { background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, var(--ws-texture) 20px, var(--ws-texture) 22px), repeating-linear-gradient(90deg, transparent, transparent 20px, var(--ws-texture) 20px, var(--ws-texture) 22px); }
+        .ws-texture-confetti { background-image: radial-gradient(circle at 20% 30%, var(--ws-texture) 2px, transparent 2px), radial-gradient(circle at 80% 40%, var(--ws-texture) 3px, transparent 3px), radial-gradient(circle at 40% 80%, var(--ws-texture) 2px, transparent 2px); background-size: 30px 30px; }
+
+        /* Comment previews */
+        .comment-mock {
+            padding: 1rem; transition: all 0.3s ease;
+            border-radius: var(--ws-bradius, 0px); border-style: var(--ws-bstyle, none); border-width: var(--ws-bwidth, 0px);
+            text-transform: var(--ws-transform, none); text-align: var(--ws-align, left); letter-spacing: var(--ws-lspacing, 0px);
+            box-shadow: var(--ws-soffset, 0px) var(--ws-soffset, 0px) var(--ws-sblur, 0px) rgba(0, 0, 0, 0.15);
+        }
+        .comment-mock.light-mode { background-color: var(--ws-bg-light, #ffffff); color: var(--ws-text-light, #000000); border-color: var(--ws-bcolor-light, transparent); --ws-texture: var(--ws-texture-light, transparent); }
+        .comment-mock.dark-mode { background-color: var(--ws-bg-dark, #1e293b); color: var(--ws-text-dark, #f8fafc); border-color: var(--ws-bcolor-dark, transparent); --ws-texture: var(--ws-texture-dark, transparent); }
+        .comment-mock a { text-decoration: none; transition: color 0.2s; }
+        .comment-mock.light-mode a { color: var(--ws-link-light, #3b82f6); }
+        .comment-mock.dark-mode a { color: var(--ws-link-dark, #60a5fa); }
+        .comment-mock ul { list-style-type: var(--ws-list, disc); padding-left: 2rem; }
+        .comment-meta { font-size: 0.85em; opacity: 0.7; margin-bottom: 1rem; font-family: sans-serif; letter-spacing: normal; text-transform: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Whostyle Generator (v1.0)</h1>
+        <p>Visually configure and generate your ultralight whostyle meta tag.</p>
+    </header>
+
+    <div class="container">
+        <div class="panel sticky-panel">
+            <div class="panel-header">
+                <h2>Live Preview</h2>
+                <button type="button" id="btn_unpin" class="btn-hsl" style="font-size: 1rem;" title="Unpin from top">📌</button>
+            </div>
+            <div id="contrast_warning" class="toast-warning"></div>
+            <div class="preview-row">
+                <div class="comment-mock light-mode" id="preview_light">
+                    <div class="comment-meta"><strong>Alice</strong> replied on example.com</div>
+                    <div>
+                        I absolutely love this new V1 hash format! It's so efficient.
+                        Check out my <a href="#">personal website</a>.
+                        <ul>
+                            <li>Data-driven</li>
+                            <li>Secure</li>
+                            <li>Aesthetic</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="comment-mock dark-mode" id="preview_dark">
+                    <div class="comment-meta"><strong>Bob</strong> replied on anothersite.net</div>
+                    <div>
+                        Dark mode fallback is working perfectly. The contrast ensures everything remains legible.
+                        Have you read the <a href="#">V1 specification</a>?
+                        <ul>
+                            <li>No JSON overhead</li>
+                            <li>Bitpacked</li>
+                            <li>Cross-platform</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="config-row">
+                <div class="config-col">
+                    <h2>Design Tokens</h2>
+                    <div class="token-grid">
+                        <div class="form-group">
+                            <label>Typography (28 Stacks)</label>
+                            <select id="i_typography">
+                                <option value="0">0: System UI</option>
+                                <option value="1">1: Segoe UI, Roboto</option>
+                                <option value="2">2: Helvetica Neue</option>
+                                <option value="3">3: Verdana</option>
+                                <option value="4">4: Trebuchet MS</option>
+                                <option value="5">5: Tahoma</option>
+                                <option value="6">6: Century Gothic</option>
+                                <option value="7">7: Franklin Gothic</option>
+                                <option value="8">8: Gill Sans</option>
+                                <option value="9">9: Arial Rounded</option>
+                                <option value="10">10: Georgia</option>
+                                <option value="11">11: Times New Roman</option>
+                                <option value="12">12: Garamond</option>
+                                <option value="13">13: Palatino</option>
+                                <option value="14">14: Baskerville</option>
+                                <option value="15">15: Bookman</option>
+                                <option value="16">16: Cambria</option>
+                                <option value="17">17: Didot</option>
+                                <option value="18">18: Bodoni MT</option>
+                                <option value="19">19: Rockwell</option>
+                                <option value="20">20: ui-monospace</option>
+                                <option value="21">21: Consolas</option>
+                                <option value="22">22: Courier New</option>
+                                <option value="23">23: Monaco</option>
+                                <option value="24">24: Lucida Console</option>
+                                <option value="25">25: Andale Mono</option>
+                                <option value="26">26: SF Mono</option>
+                                <option value="27">27: Cascadia Code</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Texture (32 Patterns)</label>
+                            <select id="i_bg_texture">
+                                <option value="0">0: none</option>
+                                <option value="1">1: noise</option>
+                                <option value="2">2: stripes-v</option>
+                                <option value="3">3: stripes-h</option>
+                                <option value="4">4: stripes-d-right</option>
+                                <option value="5">5: stripes-d-left</option>
+                                <option value="6">6: pinstripes</option>
+                                <option value="7">7: wavy-lines</option>
+                                <option value="8">8: zigzag-lines</option>
+                                <option value="9">9: grid-standard</option>
+                                <option value="10">10: grid-fine</option>
+                                <option value="11">11: grid-isometric</option>
+                                <option value="12">12: crosses</option>
+                                <option value="13">13: crosshatch</option>
+                                <option value="14">14: checkerboard</option>
+                                <option value="15">15: checkerboard-tilt</option>
+                                <option value="16">16: triangles</option>
+                                <option value="17">17: diamonds</option>
+                                <option value="18">18: argyle</option>
+                                <option value="19">19: honeycomb</option>
+                                <option value="20">20: chevron</option>
+                                <option value="21">21: houndstooth</option>
+                                <option value="22">22: brick-wall</option>
+                                <option value="23">23: dots-sparse</option>
+                                <option value="24">24: polka-dots</option>
+                                <option value="25">25: circles-concentric</option>
+                                <option value="26">26: scallop</option>
+                                <option value="27">27: waves</option>
+                                <option value="28">28: woven</option>
+                                <option value="29">29: denim</option>
+                                <option value="30">30: tartan</option>
+                                <option value="31">31: confetti</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Text Transform</label>
+                            <select id="i_transform">
+                                <option value="0">0: none</option>
+                                <option value="1">1: capitalize</option>
+                                <option value="2">2: uppercase</option>
+                                <option value="3">3: lowercase</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Text Align</label>
+                            <select id="i_align">
+                                <option value="0">0: left</option>
+                                <option value="1">1: right</option>
+                                <option value="2">2: center</option>
+                                <option value="3">3: justify</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>List Style</label>
+                            <select id="i_list">
+                                <option value="0">0: disc</option>
+                                <option value="1">1: circle</option>
+                                <option value="2">2: square</option>
+                                <option value="3">3: decimal</option>
+                                <option value="4">4: lower-roman</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Border Style</label>
+                            <select id="i_bstyle">
+                                <option value="0">0: none</option>
+                                <option value="1">1: hidden</option>
+                                <option value="2">2: dotted</option>
+                                <option value="3">3: dashed</option>
+                                <option value="4">4: solid</option>
+                                <option value="5">5: double</option>
+                                <option value="6">6: groove</option>
+                                <option value="7">7: ridge</option>
+                                <option value="8">8: inset</option>
+                                <option value="9">9: outset</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Border Width (0-6)</label>
+                            <input type="number" id="i_bwidth" value="0" min="0" max="6">
+                        </div>
+                        <div class="form-group">
+                            <label>Border Radius (0-16)</label>
+                            <input type="number" id="i_bradius" value="0" min="0" max="16">
+                        </div>
+                        <div class="form-group">
+                            <label>Shadow Offset (0-8, 4=center)</label>
+                            <input type="number" id="i_soffset" value="4" min="0" max="8">
+                        </div>
+                        <div class="form-group">
+                            <label>Shadow Blur (0-8)</label>
+                            <input type="number" id="i_sblur" value="0" min="0" max="8">
+                        </div>
+                        <div class="form-group">
+                            <label>Letter Spacing (0-25)</label>
+                            <input type="number" id="i_lspacing" value="5" min="0" max="25">
+                        </div>
+                        <div class="form-group">
+                            <label>Texture Opacity</label>
+                            <select id="i_topacity">
+                                <option value="0">100%</option>
+                                <option value="1">75%</option>
+                                <option value="2">50%</option>
+                                <option value="3">25%</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Shadow Opacity</label>
+                            <select id="i_sopacity">
+                                <option value="0">100%</option>
+                                <option value="1">75%</option>
+                                <option value="2">50%</option>
+                                <option value="3">25%</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-col">
+                    <h2>Theme: Light Mode</h2>
+                    <div class="control-row">
+                        <div class="color-grid">
+                            <div class="form-group">
+                                <label>Background</label>
+                                <input type="color" id="l_bg" value="#f8fafc">
+                            </div>
+                            <div class="form-group">
+                                <label>Text <span id="ind_l_text" class="c-ind"></span></label>
+                                <input type="color" id="l_text" value="#0f172a">
+                            </div>
+                            <div class="form-group">
+                                <label>Accent (Border/Link) <span id="ind_l_accent" class="c-ind"></span></label>
+                                <input type="color" id="l_accent" value="#3b82f6">
+                            </div>
+                            <div class="form-group">
+                                <label>Texture Color</label>
+                                <input type="color" id="l_texture" value="#e2e8f0">
+                            </div>
+                        </div>
+                    </div>
+                    <h2>Theme: Dark Mode</h2>
+                    <div class="control-row">
+                        <div class="color-grid">
+                            <div class="form-group">
+                                <label>Background</label>
+                                <input type="color" id="d_bg" value="#1e293b">
+                            </div>
+                            <div class="form-group">
+                                <label>Text <span id="ind_d_text" class="c-ind"></span></label>
+                                <input type="color" id="d_text" value="#f8fafc">
+                            </div>
+                            <div class="form-group">
+                                <label>Accent (Border/Link) <span id="ind_d_accent" class="c-ind"></span></label>
+                                <input type="color" id="d_accent" value="#60a5fa">
+                            </div>
+                            <div class="form-group">
+                                <label>Texture Color</label>
+                                <input type="color" id="d_texture" value="#334155">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Output & Export</h2>
+            <div class="config-row">
+                <div class="output-section" style="grid-column: 1 / -1;">
+                    <h3>Meta Tag Hash <span class="recommended-badge">V1 Standard</span></h3>
+                    <p class="instruction">Embed this inside your <code>&lt;head&gt;</code> to apply your identity via the Whostyle V1 protocol.</p>
+                    <div class="json-output" id="meta_out"></div>
+                    <div class="action-row">
+                        <button class="btn secondary" id="btn_copy_meta">Copy Meta Tag</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WhostyleCore = {
+            ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+            RADIXES: { typography: 28, transform: 4, align: 4, list: 5, border_style: 10, bg_texture: 32, border_width: 7, border_radius: 17, shadow_offset: 9, shadow_blur: 9, letter_spacing: 26, texture_opacity: 4, shadow_opacity: 4, checksum: 6 },
+            encodeBase64(value, length) {
+                let result = ''; let v = BigInt(value);
+                for (let i = 0; i < length; i++) { result += this.ALPHABET[Number(v % 64n)]; v = v / 64n; }
+                return result;
+            },
+            encodeColor(hex) {
+                const val = parseInt(hex.replace('#', ''), 16);
+                return this.ALPHABET[(val >> 18) & 63] + this.ALPHABET[(val >> 12) & 63] + this.ALPHABET[(val >> 6) & 63] + this.ALPHABET[val & 63];
+            },
+            calculateChecksum(config) {
+                const weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+                const props = [
+                    'typography', 'transform', 'align', 'list', 'border_style',
+                    'bg_texture', 'border_width', 'border_radius', 'shadow_offset',
+                    'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity'
+                ];
+                let sum = 0;
+                for (let i = 0; i < props.length; i++) { sum += Number(config[props[i]]) * weights[i]; }
+                return sum % 6;
+            },
+            encode(config, colors) {
+                config.checksum = this.calculateChecksum(config);
+                let value = 0n;
+                const order = Object.keys(this.RADIXES).reverse();
+                for (const key of order) { value = value * BigInt(this.RADIXES[key]) + BigInt(config[key]); }
+                const configB64 = this.encodeBase64(value, 8);
+                const colorOrder = ['light_bg', 'light_text', 'light_accent', 'light_texture', 'dark_bg', 'dark_text', 'dark_accent', 'dark_texture'];
+                let colorsB64 = '';
+                for (const key of colorOrder) { colorsB64 += this.encodeColor(colors[key] || '#000000'); }
+                return `{ws1:${configB64}${colorsB64}}`;
+            }
+        };
+
+        const inputs = [
+            'i_typography', 'i_transform', 'i_align', 'i_list', 'i_bstyle', 'i_bg_texture',
+            'i_bwidth', 'i_bradius', 'i_soffset', 'i_sblur', 'i_lspacing', 'i_topacity', 'i_sopacity',
+            'l_bg', 'l_text', 'l_accent', 'l_texture',
+            'd_bg', 'd_text', 'd_accent', 'd_texture'
+        ];
+
+        function getVal(id) { return document.getElementById(id).value; }
+        function getNum(id) { return parseInt(document.getElementById(id).value) || 0; }
+
+        function getRelativeLuminance(hex) {
+            const cleanHex = hex.replace(/^#/, '');
+            let r = parseInt(cleanHex.substring(0, 2), 16), g = parseInt(cleanHex.substring(2, 4), 16), b = parseInt(cleanHex.substring(4, 6), 16);
+            const a = [r, g, b].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+            return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+        }
+
+        function getContrastRatio(color1, color2) {
+            const lum1 = getRelativeLuminance(color1); const lum2 = getRelativeLuminance(color2);
+            return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
+        }
+
+        function updatePreviewAndHash() {
+            const root = document.documentElement;
+            
+            const config = {
+                typography: getNum('i_typography'), transform: getNum('i_transform'), align: getNum('i_align'),
+                list: getNum('i_list'), border_style: getNum('i_bstyle'), bg_texture: getNum('i_bg_texture'),
+                border_width: getNum('i_bwidth'), border_radius: getNum('i_bradius'), shadow_offset: getNum('i_soffset'),
+                shadow_blur: getNum('i_sblur'), letter_spacing: getNum('i_lspacing'),
+                texture_opacity: getNum('i_topacity'), shadow_opacity: getNum('i_sopacity')
+            };
+
+            const colors = {
+                light_bg: getVal('l_bg'), light_text: getVal('l_text'), light_accent: getVal('l_accent'), light_texture: getVal('l_texture'),
+                dark_bg: getVal('d_bg'), dark_text: getVal('d_text'), dark_accent: getVal('d_accent'), dark_texture: getVal('d_texture')
+            };
+
+            const transforms = ['none', 'capitalize', 'uppercase', 'lowercase'];
+            const aligns = ['left', 'right', 'center', 'justify'];
+            const lists = ['disc', 'circle', 'square', 'decimal', 'lower-roman'];
+            const borders = ['none', 'hidden', 'dotted', 'dashed', 'solid', 'double', 'groove', 'ridge', 'inset', 'outset'];
+
+            // Map configurations
+            root.style.setProperty('--ws-transform', transforms[config.transform]);
+            root.style.setProperty('--ws-align', aligns[config.align]);
+            root.style.setProperty('--ws-list', lists[config.list]);
+            root.style.setProperty('--ws-bstyle', borders[config.border_style]);
+            root.style.setProperty('--ws-bwidth', config.border_width + 'px');
+            root.style.setProperty('--ws-bradius', config.border_radius + 'px');
+            root.style.setProperty('--ws-soffset', (config.shadow_offset - 4) + 'px');
+            root.style.setProperty('--ws-sblur', config.shadow_blur + 'px');
+            root.style.setProperty('--ws-lspacing', (config.letter_spacing * 0.1 - 0.5).toFixed(1) + 'px');
+
+            let l_bg = colors.light_bg, l_text = colors.light_text, d_bg = colors.dark_bg, d_text = colors.dark_text;
+            let l_accent = colors.light_accent, d_accent = colors.dark_accent;
+            let showWarning = false; let contrastErrors = [];
+
+            const setInd = (id, ratio) => { const el = document.getElementById(id); if (el) el.innerHTML = ratio >= 4.5 ? '✅' : '🔴'; };
+
+            let ratio = getContrastRatio(l_bg, l_text); setInd('ind_l_text', ratio);
+            if (ratio < 4.5) { contrastErrors.push(`Text vs Background in Light Theme: ${ratio.toFixed(2)}:1`); l_bg = '#ffffff'; l_text = '#000000'; showWarning = true; }
+            
+            ratio = getContrastRatio(l_bg, l_accent); setInd('ind_l_accent', ratio);
+            if (ratio < 4.5) { contrastErrors.push(`Accent vs Background in Light Theme: ${ratio.toFixed(2)}:1`); l_accent = l_text; showWarning = true; }
+
+            ratio = getContrastRatio(d_bg, d_text); setInd('ind_d_text', ratio);
+            if (ratio < 4.5) { contrastErrors.push(`Text vs Background in Dark Theme: ${ratio.toFixed(2)}:1`); d_bg = '#121212'; d_text = '#e0e0e0'; showWarning = true; }
+
+            ratio = getContrastRatio(d_bg, d_accent); setInd('ind_d_accent', ratio);
+            if (ratio < 4.5) { contrastErrors.push(`Accent vs Background in Dark Theme: ${ratio.toFixed(2)}:1`); d_accent = d_text; showWarning = true; }
+
+            const warningDiv = document.getElementById('contrast_warning');
+            if (showWarning) {
+                warningDiv.innerHTML = `<strong>⚠️ Accessibility Warning:</strong> Contrast too low.<br>` + contrastErrors.join('<br>');
+                warningDiv.style.display = 'block';
+            } else { warningDiv.style.display = 'none'; }
+
+            // Theme Light
+            root.style.setProperty('--ws-bg-light', l_bg);
+            root.style.setProperty('--ws-text-light', l_text);
+            root.style.setProperty('--ws-bcolor-light', l_accent);
+            root.style.setProperty('--ws-link-light', l_accent);
+            root.style.setProperty('--ws-texture-light', colors.light_texture);
+
+            // Theme Dark
+            root.style.setProperty('--ws-bg-dark', d_bg);
+            root.style.setProperty('--ws-text-dark', d_text);
+            root.style.setProperty('--ws-bcolor-dark', d_accent);
+            root.style.setProperty('--ws-link-dark', d_accent);
+            root.style.setProperty('--ws-texture-dark', colors.dark_texture);
+
+            // Set classes
+            const typographyNames = [
+                'system-ui', 'segoe-roboto', 'helvetica-neue', 'verdana', 'trebuchet',
+                'tahoma', 'century-gothic', 'franklin-gothic', 'gill-sans', 'arial-rounded',
+                'georgia', 'times-new-roman', 'garamond', 'palatino', 'baskerville',
+                'bookman', 'cambria', 'didot', 'bodoni', 'rockwell',
+                'monospace', 'consolas', 'courier-new', 'monaco', 'lucida-console',
+                'andale-mono', 'sf-mono', 'cascadia-code'
+            ];
+
+            const textureNames = [
+                'none', 'noise', 'stripes-v', 'stripes-h', 'stripes-d-right',
+                'stripes-d-left', 'pinstripes', 'wavy-lines', 'zigzag-lines', 'grid-standard',
+                'grid-fine', 'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
+                'checkerboard-tilt', 'triangles', 'diamonds', 'argyle', 'honeycomb',
+                'chevron', 'houndstooth', 'brick-wall', 'dots-sparse', 'polka-dots',
+                'circles-concentric', 'scallop', 'waves', 'woven', 'denim',
+                'tartan', 'confetti'
+            ];
+
+            ['preview_light', 'preview_dark'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = el.className.replace(/\bws-typography-[\w-]+\b/g, '').replace(/\bws-texture-[\w-]+\b/g, '');
+                el.classList.add(`ws-typography-${typographyNames[config.typography] || 'system-ui'}`);
+                el.classList.add(`ws-texture-${textureNames[config.bg_texture] || 'none'}`);
+            });
+
+            // Update Hash
+            const hash = WhostyleCore.encode(config, colors);
+            const metaTag = `<meta name="whostyle" content="${hash}">`;
+            document.getElementById('meta_out').textContent = metaTag;
+        }
+
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.addEventListener('input', updatePreviewAndHash); el.addEventListener('change', updatePreviewAndHash); }
+        });
+
+        document.getElementById('btn_copy_meta').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('meta_out').textContent);
+            const btn = document.getElementById('btn_copy_meta');
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy Meta Tag", 2000);
+        });
+
+        document.getElementById('btn_unpin').addEventListener('click', function() {
+            const panel = document.querySelector('.sticky-panel');
+            if (panel.style.position === 'relative') {
+                panel.style.position = 'sticky'; this.style.opacity = '1'; this.title = "Unpin from top";
+            } else {
+                panel.style.position = 'relative'; this.style.opacity = '0.5'; this.title = "Pin to top"; panel.classList.remove('scrolled');
+            }
+        });
+
+        window.addEventListener('scroll', () => {
+            const panel = document.querySelector('.sticky-panel');
+            if (window.scrollY > 50) panel.classList.add('scrolled'); else panel.classList.remove('scrolled');
+        });
+
+        updatePreviewAndHash();
+    </script>
+</body>
+</html>

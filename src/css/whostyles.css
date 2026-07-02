@@ -1,0 +1,72 @@
+/* Whostyle v1.0 - Core Stylesheet */
+@import url('./typography.css');
+@import url('./textures.css');
+
+:root {
+    /* Default fallback colors if not provided */
+    --ws-light-bg: #ffffff;
+    --ws-light-text: #000000;
+    --ws-light-accent: #0000ff;
+    --ws-light-texture: transparent;
+    
+    --ws-dark-bg: #000000;
+    --ws-dark-text: #ffffff;
+    --ws-dark-accent: #00aaff;
+    --ws-dark-texture: transparent;
+}
+
+.whostyle-container {
+    /* Auto-switching variables (Default to Light Mode) */
+    --ws-bg: var(--ws-light-bg);
+    --ws-text: var(--ws-light-text);
+    --ws-bcolor: var(--ws-light-accent);
+    --ws-scolor: var(--ws-light-shadow);
+    --ws-link: var(--ws-light-accent);
+    --ws-texture: var(--ws-light-texture);
+
+    /* Apply Core Styles */
+    background-color: var(--ws-bg);
+    color: var(--ws-text);
+    border-style: var(--ws-bstyle, none);
+    border-width: var(--ws-bwidth, 0px);
+    border-color: var(--ws-bcolor);
+    border-radius: var(--ws-bradius, 0px);
+    box-shadow: var(--ws-soffset, 0px) var(--ws-soffset, 0px) var(--ws-sblur, 0px) var(--ws-scolor);
+    
+    /* Typography Styles */
+    text-align: var(--ws-align, left);
+    text-transform: var(--ws-transform, none);
+    letter-spacing: var(--ws-lspacing, 0px);
+    
+    /* Defensive additions for layout stability */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    
+    /* Ensure padding for borders/shadows if applicable, normally handled by host */
+    box-sizing: border-box;
+    
+    /* Flexbox overflow protection */
+    min-width: 0;
+}
+
+.whostyle-container a {
+    color: var(--ws-link);
+}
+
+.whostyle-container ul,
+.whostyle-container ol {
+    list-style-type: var(--ws-list, disc);
+}
+
+/* Auto-switch to Dark Mode if the system prefers it */
+@media (prefers-color-scheme: dark) {
+    .whostyle-container {
+        --ws-bg: var(--ws-dark-bg);
+        --ws-text: var(--ws-dark-text);
+        --ws-bcolor: var(--ws-dark-accent);
+        --ws-scolor: var(--ws-dark-shadow);
+        --ws-link: var(--ws-dark-accent);
+        --ws-texture: var(--ws-dark-texture);
+    }
+}

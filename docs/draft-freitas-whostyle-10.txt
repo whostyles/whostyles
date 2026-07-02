@@ -1,0 +1,679 @@
+Network Working Group                                     L. Freitas, Ed.
+Internet-Draft                                             Canimandra Lab
+Intended status: Informational                              June 24, 2026
+Expires: December 24, 2026
+
+
+                 The Whostyle Protocol (V1) Specification
+                       draft-freitas-whostyle-10
+
+Abstract
+
+   This document defines Whostyle Protocol V1, a structured, data-driven 
+   format for syndicating personal typographic and cosmetic styles 
+   across decentralized web platforms (e.g., the IndieWeb, Fediverse).
+   By constraining user-defined styles to a strict subset of design 
+   tokens encoded via mathematical bitpacking into a 46-byte Base64 hash, 
+   this specification enables host platforms to render third-party 
+   syndicated content while guaranteeing layout integrity, performance, 
+   accessibility, and mitigation of CSS injection vulnerabilities.
+
+Status of This Memo
+
+   This Internet-Draft is in full conformance with the provisions of
+   BCP 14 [RFC2119] [RFC8174].
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+1.  Introduction
+
+   Decentralized web interactions, such as Webmentions [W3C.REC-webmention],
+   often strip the original author's visual identity when displaying 
+   syndicated responses on a host platform. Prior attempts to preserve 
+   visual identity relied on raw CSS injection or IFrames, 
+   introducing severe security vectors and high computational overhead.
+
+   Whostyle V1 solves these design flaws by abstracting cosmetic 
+   styles into a mathematical bitpacked hash (e.g., {ws1:...}). 
+   This format translates styling into non-executable design data, 
+   eliminating structural layout properties (such as position, display, 
+   and float) and third-party asset loading (such as external web fonts).
+
+2.  Discovery Mechanism
+
+   To apply a Whostyle identity, the author's platform MUST broadcast 
+   the styling data Hash. This can be done at the protocol level (HTTP), 
+   the document head (Meta, Link, JSON-LD), or the document body (Inline).
+
+2.1. Discovery Precedence
+
+   To prevent malicious actors from injecting styles that override the 
+   document author's legitimate configuration (e.g., via user-generated 
+   comments), host engines MUST discover and extract hashes in the 
+   following strict order of precedence:
+
+   1. HTTP Response Headers (`X-Whostyle`)
+   2. HTML `<meta>` tags
+   3. HTML `<link>` tags
+   4. JSON-LD scripts
+   5. Inline Text (Fallback)
+
+   If a valid `{ws1:...}` hash is found at a higher precedence level, 
+   the parser MUST immediately stop searching and apply that hash.
+
+2.2. HTTP Header Discovery (Level 1)
+
+   The most secure method of syndicating a Whostyle hash is via the 
+   `X-Whostyle` HTTP response header. Since headers are controlled 
+   exclusively by the host server, they are immune to XSS and content 
+   injection.
+
+   Example:
+   X-Whostyle: {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}
+
+2.3. Meta Tag Discovery (Level 2)
+
+   If HTTP headers cannot be modified, authors SHOULD embed the payload 
+   within the document's `<head>` using a meta tag.
+
+   Example representation in HTML:
+   <meta name="whostyle" content="{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}">
+
+2.4. Link Tag Discovery (Level 3)
+
+   Authors MAY use a `<link>` tag with a data URI payload.
+
+   Example:
+   <link rel="whostyle" href="data:text/plain,{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}">
+
+2.5. JSON-LD Discovery (Level 4)
+
+   Authors syndicating structured data MAY embed the hash as a top-level 
+   attribute within a JSON-LD block.
+
+   Example:
+   <script type="application/ld+json">
+   {
+     "@context": "https://schema.org",
+     "@type": "Article",
+     "whostyle": "{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}"
+   }
+   </script>
+
+2.6. Inline Text Discovery (Level 5 - Fallback)
+
+   If the author has no access to the `<head>` or HTTP headers (e.g., 
+   posting a comment on a legacy platform), the hash MAY be placed 
+   directly in the body text.
+   
+   Host engines MUST scan the raw text for the regex pattern: 
+   {ws1:[A-Za-z0-9\-_]{40}}
+   
+   Hash Collisions: If a document contains multiple inline hashes, the 
+   parser MUST extract and apply only the first inline hash encountered.
+
+2.7. ActivityPub Profile Discovery (Fediverse)
+
+   To syndicate styles across federated networks (such as Mastodon, Misskey, 
+   or Pleroma) without requiring modifications to the backend server software, 
+   authors MAY place the Whostyle Hash in their ActivityPub profile metadata.
+   
+   Clients (e.g., alternative web interfaces, browser extensions, or mobile 
+   apps) MUST inspect the author's PropertyValue attachments for a valid 
+   {ws1:...} hash.
+
+2.8. twtxt Feed Discovery
+
+   Authors publishing a twtxt feed [TWTXT] MAY broadcast their Whostyle
+   hash using the Metadata extension [TWTXT-META]. The hash is embedded
+   as a comment-based key-value field in the feed file header.
+
+   Format:
+   # whostyle = {ws1:CCCCCCCCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+
+   The field name "whostyle" is case-insensitive, as required by the
+   twtxt Metadata specification. Whitespace around the value MUST be
+   stripped by the parser.
+
+   Example twtxt feed header:
+   # nick = user
+   # url = https://example.com/twtxt.txt
+   # avatar = https://example.com/avatar.png
+   # whostyle = {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}
+
+   Note: twtxt feed discovery is a standalone extraction mechanism,
+   independent of the HTML discovery precedence chain (Section 2.1). 
+   Host engines consuming twtxt feeds SHOULD use a dedicated 
+   extractFromTwtxt() method (or equivalent) rather than the HTML-based 
+   discover() pipeline.
+
+2.9. Hash Extraction and Cleaning
+
+   Regardless of which hash is prioritized, the host engine SHOULD remove 
+   all inline hashes from the presentation layer (the final HTML output) 
+   during the cleaning phase to prevent them from being rendered to the 
+   end user.
+
+   To safely clean the presentation layer without inadvertently removing 
+   hashes from within <meta> tags (both unescaped in the <head> and HTML-escaped 
+   within code examples), implementations SHOULD use the following 
+   replacement logic (or equivalent parser behavior).
+
+   Note: DOM traversal (if available in the host environment) is the 
+   safest and preferred method for discovering the meta tag. The following 
+   Regex should be used as a fallback for contexts without a DOM parser.
+
+   Regex Pattern:
+   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?{ws1:[A-Za-z0-9\-_]{40}}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|({ws1:[A-Za-z0-9\-_]{40}})/i
+
+   Replacement Rule:
+   If Group 1 matches, replace with Group 1 (preserve meta tag).
+   If Group 2 matches, replace with an empty string (remove inline hash).
+
+   Escaped Hashes: Parsers MUST search for the hash within the raw HTML 
+   string before performing any entity unescaping. HTML-escaped hashes 
+   (such as &#123;ws1:... or &lbrace;ws1:...) MUST NOT be extracted.
+
+3.  Hash Specification
+
+   A Whostyle Hash MUST consist of exactly 46 characters, formatted as:
+   {ws1:CCCCCCCCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+
+   Where:
+   - "{ws1:" (5 chars) is the protocol prefix.
+   - "C" (8 chars) is the Base64 representation of the integer Configuration state.
+   - "x" (32 chars) is the Base64 representation of the 8 Theme Colors.
+   - "}" (1 char) is the suffix.
+
+3.1. Base64 Alphabet
+
+   The encoding MUST strictly use the following 64-character alphabet:
+   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_
+
+   Each character maps to its zero-indexed position in this string
+   (A=0, B=1, ..., Z=25, a=26, ..., z=51, 0=52, ..., 9=61, -=62, _=63).
+
+3.2. Version Extensibility
+
+   The protocol prefix "{ws1:" explicitly identifies this specification 
+   as Version 1. Future revisions of this protocol MUST use an incremented 
+   version prefix (e.g., "{ws3:", "{ws4:"). Parsers encountering a hash 
+   with an unrecognized version prefix MUST silently ignore it and MUST NOT 
+   attempt partial decoding. This ensures forward compatibility and allows 
+   future versions to change the internal encoding without breaking 
+   existing deployments.
+
+4.  Configuration Bitpacking (Radixes)
+
+   The first 8 Base64 characters encode an integer that represents the 
+   stylistic configuration. The encoding uses a little-endian byte order: 
+   the least significant digit is stored first (leftmost character), and 
+   the most significant digit is stored last (rightmost character).
+
+   The integer is constructed by sequentially packing properties using 
+   mixed-radix (variable-base) arithmetic, in the strict order defined 
+   below. This order is normative and MUST NOT be altered.
+
+4.1. Radix Definitions and Encoding Order
+
+   Properties MUST be packed in the following order (first property is 
+   least significant, last property is most significant):
+
+   Index   Property         Radix   Range   Description
+   -----   --------         -----   -----   -----------
+   0       typography       28      0-27    Font stack index (Appendix C)
+   1       transform        4       0-3     Text transform (Appendix D.1)
+   2       align            4       0-3     Text alignment (Appendix D.2)
+   3       list             5       0-4     List style type (Appendix D.3)
+   4       border_style     10      0-9     Border style (Appendix D.4)
+   5       bg_texture       32      0-31    Background texture (Appendix D.5)
+   6       border_width     7       0-6     Border width in px (direct)
+   7       border_radius    17      0-16    Border radius in px (direct)
+   8       shadow_offset    9       0-8     Shadow offset (see §4.2)
+   9       shadow_blur      9       0-8     Shadow blur in px (direct)
+   10      letter_spacing   26      0-25    Letter spacing (see §4.2)
+   11      texture_opacity  4       0-3     Texture opacity (see §4.2)
+   12      shadow_opacity   4       0-3     Shadow opacity (see §4.2)
+   13      checksum         6       0-5     Data integrity check (see §4.4)
+
+   Encoding Pseudocode (pack):
+   value = 0
+   // Iterate properties in REVERSE order (last to first):
+   for key in [checksum, shadow_opacity, texture_opacity, letter_spacing, shadow_blur, 
+               shadow_offset, border_radius, border_width, bg_texture,
+               border_style, list, align, transform, typography]:
+       value = value * RADIX[key] + config[key]
+
+   // Encode to 7 Base64 characters (little-endian):
+   for i in 0..7:
+       output[i] = ALPHABET[value % 64]
+       value = floor(value / 64)
+
+   Decoding Pseudocode (unpack):
+   // Decode from 7 Base64 characters (little-endian):
+   value = 0
+   multiplier = 1
+   for i in 0..7:
+       value = value + ALPHABET_INDEX[input[i]] * multiplier
+       multiplier = multiplier * 64
+
+   // Extract properties in FORWARD order (first to last):
+   for key in [typography, transform, align, list, border_style,
+               bg_texture, border_width, border_radius, 
+               shadow_offset, shadow_blur, letter_spacing,
+               texture_opacity, shadow_opacity, checksum]:
+       config[key] = value % RADIX[key]
+       value = floor(value / RADIX[key])
+
+   The maximum theoretical integer state is approximately 179.6 billion, 
+   which fits within standard 64-bit integer limits (and within 
+   JavaScript's Number.MAX_SAFE_INTEGER of 2^53-1).
+
+   Any residual integer value remaining after all properties have been 
+   decoded MUST be silently ignored by the parser.
+
+4.2. Numeric Property Conversion Formulas
+
+   Some properties require a mathematical transformation to convert from 
+   their encoded integer value to the final CSS value. The following 
+   formulas are normative:
+
+   Property          Formula              CSS Range
+   --------          -------              ---------
+   border_width      value + "px"         0px to 6px
+   border_radius     value + "px"         0px to 16px
+   shadow_offset     (value - 4) + "px"   -4px to 4px
+   shadow_blur       value + "px"         0px to 8px
+   letter_spacing    (value × 0.1 - 0.5)  -0.5px to 2.0px
+                     + "px" (1 decimal)
+   texture_opacity   [1.0, 0.75, 0.5,     100% to 25% Opacity
+                      0.25][value]
+   shadow_opacity    [1.0, 0.75, 0.5,     100% to 25% Opacity
+                      0.25][value]
+
+   Note on Shadow Offset: The shadow_offset value is applied to BOTH the 
+   horizontal (X) and vertical (Y) offset of the CSS box-shadow property, 
+   producing a diagonal shadow. This is by design to minimize the bit 
+   cost while providing meaningful visual variety.
+
+   Note on Texture Opacity: The alpha channel mapping allows authors to 
+   soften the intensity of the structural patterns without breaking the 
+   host's background colors.
+
+4.3. Theme Color Encoding
+
+   The final 32 Base64 characters encode exactly 8 Theme Colors in the 
+   following strict order:
+   
+   1. Light Background
+   2. Light Text
+   3. Light Accent
+   4. Light Texture (Color)
+   5. Dark Background
+   6. Dark Text
+   7. Dark Accent
+   8. Dark Texture (Color)
+
+   *(The Texture Color defines the 24-bit RGB fill color applied to the 
+   pattern selected by `bg_texture`)*
+
+   Each color is represented as a 24-bit RGB hexadecimal value (e.g., #FFFFFF).
+   Color encoding uses big-endian byte order (most significant bits first), 
+   in contrast to the little-endian configuration encoding (Section 4.1). 
+   To encode a color into 4 Base64 characters, the 24-bit RGB value is 
+   treated as an integer, and sliced into four 6-bit segments using bitwise 
+   operations. Each 6-bit segment acts as an index into the Base64 alphabet.
+
+   Encoding Example (Pseudocode):
+   val = parseInt(hex.replace('#', ''), 16);
+   char1 = ALPHABET[(val >> 18) & 63];
+   char2 = ALPHABET[(val >> 12) & 63];
+   char3 = ALPHABET[(val >> 6) & 63];
+   char4 = ALPHABET[val & 63];
+
+   Decoding Example (Pseudocode):
+   val = 0;
+   val = (val << 6) | ALPHABET.indexOf(char1);
+   val = (val << 6) | ALPHABET.indexOf(char2);
+   val = (val << 6) | ALPHABET.indexOf(char3);
+   val = (val << 6) | ALPHABET.indexOf(char4);
+   hex = '#' + val.toString(16).padStart(6, '0');
+
+   Invalid Colors & Contrast Thresholds: If the 32 characters decode to an 
+   RGB value that theoretically passes mathematical contrast limits (e.g., 
+   text #f5f5f5 on background #ffffff resulting in a 4.51:1 contrast) but 
+   is subjectively illegible, the protocol's fallback is not triggered. 
+   This is a known limitation of mathematical modeling, and host platforms 
+   are encouraged to apply stricter mitigations as detailed in Section 6.
+
+   *Note on Textures:* The `bg_texture` property acts as an integer 
+   index (0-31) mapping to a predefined set of structural patterns 
+   provided by the host engine (see Appendix D.5). It does not dictate 
+   color; the texture color is defined by the Theme Colors above.
+
+4.4. Data Integrity Checksum
+
+   To prevent accidental configuration corruption (e.g., from truncated 
+   copy-pasting or character replacement), the 12th property packed into 
+   the configuration integer is a Checksum.
+   
+   The checksum is calculated as the weighted sum of the preceding 13 
+   properties, modulo 6:
+   
+   Weights:
+   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+   
+   Properties (in calculation order):
+   ["typography", "transform", "align", "list", "border_style", 
+    "bg_texture", "border_width", "border_radius", "shadow_offset", 
+    "shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity"]
+    
+   Calculation Pseudocode:
+   sum = 0
+   for i = 0 to 12:
+       sum = sum + (config[Properties[i]] * Weights[i])
+   checksum = sum % 6
+   
+   Parsers MUST recalculate this checksum after decoding the configuration 
+   properties. If the computed checksum does not match the decoded 
+   checksum property, the entire payload MUST be discarded as corrupted, 
+   returning a null or error state.
+
+5.  Processing and Host Enforcement Rules
+
+5.1.  Strict Structural Omission
+
+   Host implementations MUST NOT parse, translate, or inject structural layout 
+   properties from the syndicated entity. Properties including, but not 
+   limited to, "position", "display", "float", "clear", "width", "height", 
+   "z-index", "margin", and "padding" are explicitly forbidden to ensure the 
+   host platform retains absolute authority over document geometry.
+
+5.2.  Accessibility and Contrast Validation
+
+   Prior to rendering, the host implementation SHOULD calculate the relative 
+   luminance contrast ratio between the "background" color and all foreground 
+   colors (text and accent) in accordance with Web Content Accessibility 
+   Guidelines (WCAG) 2.1.
+
+   If the computed contrast ratio is less than 4.5:1, the host engine MUST 
+   override the colors to ensure legibility. In the event of a contrast 
+   failure, ALL colors for that specific mode (light or dark) MUST revert to 
+   the following safe default standard:
+   
+   - Light Mode: Background #ffffff, Text #000000, Accent #0000ff, 
+                 Texture Color transparent
+   - Dark Mode: Background #000000, Text #ffffff, Accent #00aaff, 
+                Texture Color transparent
+
+6.  Security Considerations
+
+   Whostyle V1 addresses major security concerns associated with arbitrary 
+   CSS ingestion. By avoiding raw stylesheet parsing, libraries are 
+   immune to CSS-based data exfiltration and blind injection attacks. 
+   The fixed 46-byte hash prevents bandwidth exhaustion.
+
+   Regular Expression Denial of Service (ReDoS): Host engines must take 
+   extreme care when parsing large, unbounded user-generated text for 
+   inline hashes (as defined in Section 2.6). Implementations MUST enforce 
+   the following protections:
+   
+   1. Maximum Length Bounding: The regex MUST NOT be run on strings 
+      exceeding 50,000 characters. For larger documents, parsers MUST 
+      only scan a truncated subset or rely entirely on Meta/Header tags.
+   2. Engine Selection: Implementations SHOULD utilize linear-time (O(N)) 
+      regex engines (e.g., RE2, Rust's `regex` crate, or Go's `regexp`) 
+      to prevent catastrophic backtracking.
+   3. Fallback Complexity Limits: If linear-time engines are unavailable 
+      (e.g., native JavaScript or PHP PCRE without strict limits), 
+      implementations MUST strictly bound quantifiers inside lookarounds 
+      and non-capturing groups, and SHOULD limit the regex execution time 
+      (e.g., using `pcre.backtrack_limit` in PHP).
+
+   Contrast Poisoning: The protocol enforces a baseline WCAG AA contrast 
+   ratio of 4.5:1 (Section 5.2). However, a malicious actor could 
+   intentionally generate a color scheme that barely passes this 
+   threshold (e.g., 4.51:1) to degrade the legibility of the host 
+   platform. Because mathematical thresholds cannot perfectly account for 
+   all visual impairments, host platforms MAY enforce stricter requirements 
+   (such as WCAG AAA 7:1) or provide user-level accessibility toggles 
+   to forcibly override syndicated colors.
+
+7.  IANA Considerations
+
+   This document has no IANA actions.
+
+8.  References
+
+   [W3C.REC-webmention]
+              Sande, C., "Webmention", W3C Recommendation REC-
+              webmention-20170112, January 2017,
+              <https://www.w3.org/TR/webmention/>.
+
+   [TWTXT]    buckket, "twtxt",
+              <https://twtxt.readthedocs.io/>.
+
+   [TWTXT-META]
+              twtxt.net, "Metadata Extension",
+              <https://twtxt.dev/exts/metadata.html>.
+
+Author's Address
+
+   Lumen Freitas (Editor)
+   Canimandra Lab
+   Brazil
+
+Appendix A: Normative Test Vector
+
+   To ensure parser interoperability, all implementations MUST correctly 
+   decode the following canonical Whostyle V1 hash:
+
+   Input Hash:
+   {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}
+
+   1. Configuration Block ("tP3ClmkB")
+      Decodes to State Integer: 6913371370477
+      
+      Extracts to properties:
+      - typography: 5
+      - transform: 2
+      - align: 1
+      - list: 3
+      - border_style: 4
+      - bg_texture: 10
+      - border_width: 2
+      - border_radius: 8
+      - shadow_offset: 3
+      - shadow_blur: 5
+      - letter_spacing: 12
+      - texture_opacity: 2
+      - shadow_opacity: 1
+      - checksum: 2
+
+   2. Colors Block ("9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE")
+      Decodes to 8 RGB Colors:
+      1. Light Background: "9fXw" -> #f5f5f0
+      2. Light Text: "Ghou" -> #1a1a2e
+      3. Light Accent: "AFXM" -> #0055cc
+      4. Light Texture: "3d3d" -> #dddddd
+      5. Dark Background: "Ghou" -> #1a1a2e
+      6. Dark Text: "9fXw" -> #f5f5f0
+      7. Dark Accent: "Zqr_" -> #66aaff
+      8. Dark Texture: "MzNE" -> #333344
+
+   WCAG Contrast Verification:
+      Light Mode (bg #f5f5f0): text contrast 15.60:1, accent contrast 6.05:1
+      Dark Mode (bg #1a1a2e): text contrast 15.60:1, accent contrast 7.11:1
+      All ratios exceed the 4.5:1 minimum threshold.
+
+Appendix B: CSS Custom Properties and Class Names
+
+   Host implementations MUST use the following CSS custom property names 
+   when applying decoded Whostyle values to DOM elements. Using consistent 
+   naming ensures interoperability between the protocol's reference 
+   stylesheets and third-party host implementations.
+
+   B.1. CSS Custom Properties (set via inline style)
+
+   Property Name          Source          Description
+   -------------          ------          -----------
+   --ws-transform         config          text-transform value
+   --ws-align             config          text-align value
+   --ws-list              config          list-style-type value
+   --ws-bstyle            config          border-style value
+   --ws-bwidth            config          border-width in px
+   --ws-bradius           config          border-radius in px
+   --ws-soffset           config          box-shadow offset in px
+   --ws-sblur             config          box-shadow blur in px
+   --ws-lspacing          config          letter-spacing in px
+   --ws-light-bg          colors          Light mode background
+   --ws-light-text        colors          Light mode text color
+   --ws-light-accent      colors          Light mode accent/link color
+   --ws-light-texture     colors          Light mode texture fill color
+   --ws-light-shadow      colors          Light mode shadow color (derived)
+   --ws-dark-bg           colors          Dark mode background
+   --ws-dark-text         colors          Dark mode text color
+   --ws-dark-accent       colors          Dark mode accent/link color
+   --ws-dark-texture      colors          Dark mode texture fill color
+   --ws-dark-shadow       colors          Dark mode shadow color (derived)
+
+   B.2. CSS Class Names (set via class attribute)
+
+   Class Name                     Description
+   ----------                     -----------
+   whostyle-container             Primary styling hook; activates the 
+                                  reference stylesheet rules.
+   whostyle-rendered              Processing marker; indicates that 
+                                  Whostyle attributes have been applied 
+                                  to this element.
+   ws-typography-{name}           Activates a font-family stack where 
+                                  {name} corresponds to Appendix C.
+   ws-texture-{name}              Activates a background texture where 
+                                  {name} corresponds to Appendix D.5.
+
+Appendix C: Typography Stacks (28 Entries)
+
+   The following table defines the normative mapping from the integer 
+   index (encoded in the `typography` property) to the CSS class name 
+   suffix and the corresponding font-family stack. All stacks use only 
+   locally-installed system fonts; no external font files are loaded.
+
+   Index  Class Suffix       Font Stack
+   -----  ------------       ----------
+   0      system-ui          system-ui, sans-serif
+   1      segoe-roboto       "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+   2      helvetica-neue     "Helvetica Neue", Helvetica, Arial, sans-serif
+   3      verdana            Verdana, Geneva, sans-serif
+   4      trebuchet          "Trebuchet MS", "Lucida Grande", sans-serif
+   5      tahoma             Tahoma, Geneva, sans-serif
+   6      century-gothic     "Century Gothic", Tw Cen MT, sans-serif
+   7      franklin-gothic    "Franklin Gothic Medium", "Arial Narrow", sans-serif
+   8      gill-sans          "Gill Sans", "Gill Sans MT", Calibri, sans-serif
+   9      arial-rounded      "Arial Rounded MT Bold", "Helvetica Rounded", sans-serif
+   10     georgia            Georgia, serif
+   11     times-new-roman    "Times New Roman", Times, serif
+   12     garamond           Garamond, "Hoefler Text", "Times New Roman", serif
+   13     palatino           Palatino, "Palatino Linotype", "Book Antiqua", serif
+   14     baskerville        Baskerville, "Baskerville Old Face", "Hoefler Text", serif
+   15     bookman            "Bookman Old Style", Bookman, URW Bookman L, serif
+   16     cambria            Cambria, Georgia, serif
+   17     didot              Didot, "Didot LT STD", "Hoefler Text", serif
+   18     bodoni             "Bodoni MT", Didot, "Hoefler Text", serif
+   19     rockwell           "Rockwell", "Courier Bold", Courier, serif
+   20     monospace          ui-monospace, monospace
+   21     consolas           Consolas, "Liberation Mono", Menlo, Courier, monospace
+   22     courier-new        "Courier New", Courier, monospace
+   23     monaco             Monaco, Consolas, "Lucida Console", monospace
+   24     lucida-console     "Lucida Console", "Lucida Sans Typewriter", monospace
+   25     andale-mono        "Andale Mono", "AndaleMono", monospace
+   26     sf-mono            "SF Mono", Menlo, Monaco, Consolas, monospace
+   27     cascadia-code      "Cascadia Code", "Fira Code", Consolas, monospace
+
+Appendix D: Enum Property Lookup Tables
+
+   D.1. Text Transform (4 values)
+
+   Index  CSS Value
+   -----  ---------
+   0      none
+   1      capitalize
+   2      uppercase
+   3      lowercase
+
+   D.2. Text Alignment (4 values)
+
+   Index  CSS Value
+   -----  ---------
+   0      left
+   1      right
+   2      center
+   3      justify
+
+   D.3. List Style Type (5 values)
+
+   Index  CSS Value
+   -----  ---------
+   0      disc
+   1      circle
+   2      square
+   3      decimal
+   4      lower-roman
+
+   D.4. Border Style (10 values)
+
+   Index  CSS Value
+   -----  ---------
+   0      none
+   1      hidden
+   2      dotted
+   3      dashed
+   4      solid
+   5      double
+   6      groove
+   7      ridge
+   8      inset
+   9      outset
+
+   D.5. Background Textures (32 patterns)
+
+   All patterns MUST be generated exclusively using native CSS functions 
+   (repeating-linear-gradient, linear-gradient, radial-gradient, 
+   repeating-radial-gradient). No external images or assets are permitted.
+
+   Index  Class Suffix           Description
+   -----  ------------           -----------
+   0      none                   Solid color (no pattern)
+   1      noise                  Approximated static noise
+   2      stripes-v              Vertical stripes
+   3      stripes-h              Horizontal stripes
+   4      stripes-d-right        Right diagonal stripes (45°)
+   5      stripes-d-left         Left diagonal stripes (-45°)
+   6      pinstripes             Thin vertical pinstripes
+   7      wavy-lines             Sine-wave approximation lines
+   8      zigzag-lines           Zigzag lines
+   9      grid-standard          Basic square grid (20px)
+   10     grid-fine              Fine millimeter grid (5px)
+   11     grid-isometric         Isometric triangular grid
+   12     crosses                Crosses / registration marks
+   13     crosshatch             Crosshatch pattern (45°/-45°)
+   14     checkerboard           Traditional checkerboard
+   15     checkerboard-tilt      45° tilted checkerboard
+   16     triangles              Interlocking triangles
+   17     diamonds               Adjacent diamonds
+   18     argyle                 Overlapping diamonds with lines
+   19     honeycomb              Honeycomb-style hexagons
+   20     chevron                Thick zigzag pattern
+   21     houndstooth            Pied-de-poule pattern
+   22     brick-wall             Brick wall pattern
+   23     dots-sparse            Spaced dotted pattern
+   24     polka-dots             Large polka dots
+   25     circles-concentric     Concentric circles
+   26     scallop                Overlapping circles / fish scales
+   27     waves                  Cut concentric wave pattern
+   28     woven                  Rustic woven fabric texture
+   29     denim                  Diagonal weave texture
+   30     tartan                 Translucent plaid pattern
+   31     confetti               Scattered radial blocks

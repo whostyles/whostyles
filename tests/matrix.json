@@ -1,0 +1,299 @@
+[
+  {
+    "name": "Canonical Test Vector (Appendix A)",
+    "input": {
+      "config": {
+        "typography": 5,
+        "transform": 2,
+        "align": 1,
+        "list": 3,
+        "border_style": 4,
+        "bg_texture": 10,
+        "border_width": 2,
+        "border_radius": 8,
+        "shadow_offset": 3,
+        "shadow_blur": 5,
+        "letter_spacing": 12,
+        "texture_opacity": 2,
+        "shadow_opacity": 1,
+        "checksum": 2
+      },
+      "colors": {
+        "light_bg": "#f5f5f0",
+        "light_text": "#1a1a2e",
+        "light_accent": "#0055cc",
+        "light_texture": "#dddddd",
+        "dark_bg": "#1a1a2e",
+        "dark_text": "#f5f5f0",
+        "dark_accent": "#66aaff",
+        "dark_texture": "#333344"
+      }
+    },
+    "hash": "{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Zero State (All 0s)",
+    "input": {
+      "config": {
+        "typography": 0,
+        "transform": 0,
+        "align": 0,
+        "list": 0,
+        "border_style": 0,
+        "bg_texture": 0,
+        "border_width": 0,
+        "border_radius": 0,
+        "shadow_offset": 0,
+        "shadow_blur": 0,
+        "letter_spacing": 0,
+        "texture_opacity": 0,
+        "shadow_opacity": 0,
+        "checksum": 0
+      },
+      "colors": {
+        "light_bg": "#000000",
+        "light_text": "#000000",
+        "light_accent": "#000000",
+        "light_texture": "#000000",
+        "dark_bg": "#000000",
+        "dark_text": "#000000",
+        "dark_accent": "#000000",
+        "dark_texture": "#000000"
+      }
+    },
+    "hash": "{ws1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Max State (All Max)",
+    "input": {
+      "config": {
+        "typography": 27,
+        "transform": 3,
+        "align": 3,
+        "list": 4,
+        "border_style": 9,
+        "bg_texture": 31,
+        "border_width": 6,
+        "border_radius": 16,
+        "shadow_offset": 8,
+        "shadow_blur": 8,
+        "letter_spacing": 25,
+        "texture_opacity": 3,
+        "shadow_opacity": 3,
+        "checksum": 1
+      },
+      "colors": {
+        "light_bg": "#ffffff",
+        "light_text": "#ffffff",
+        "light_accent": "#ffffff",
+        "light_texture": "#ffffff",
+        "dark_bg": "#ffffff",
+        "dark_text": "#ffffff",
+        "dark_accent": "#ffffff",
+        "dark_texture": "#ffffff"
+      }
+    },
+    "hash": "{ws1:___UspTB________________________________}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Typical State (Bootstrap-like)",
+    "input": {
+      "config": {
+        "typography": 1,
+        "transform": 0,
+        "align": 0,
+        "list": 0,
+        "border_style": 4,
+        "bg_texture": 9,
+        "border_width": 1,
+        "border_radius": 4,
+        "shadow_offset": 5,
+        "shadow_blur": 4,
+        "letter_spacing": 5,
+        "texture_opacity": 0,
+        "shadow_opacity": 2,
+        "checksum": 4
+      },
+      "colors": {
+        "light_bg": "#f8f9fa",
+        "light_text": "#212529",
+        "light_accent": "#0d6efd",
+        "light_texture": "#e9ecef",
+        "dark_bg": "#212529",
+        "dark_text": "#f8f9fa",
+        "dark_accent": "#0d6efd",
+        "dark_texture": "#343a40"
+      }
+    },
+    "hash": "{ws1:BakjQx8C-Pn6ISUpDW796ezvISUp-Pn6DW79NDpA}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Contrast Fallback Trigger (Light fails, Dark passes)",
+    "input": {
+      "config": {
+        "typography": 10,
+        "transform": 0,
+        "align": 2,
+        "list": 0,
+        "border_style": 0,
+        "bg_texture": 0,
+        "border_width": 0,
+        "border_radius": 0,
+        "shadow_offset": 4,
+        "shadow_blur": 0,
+        "letter_spacing": 5,
+        "texture_opacity": 0,
+        "shadow_opacity": 0,
+        "checksum": 5
+      },
+      "colors": {
+        "light_bg": "#ffffff",
+        "light_text": "#cccccc",
+        "light_accent": "#dddddd",
+        "light_texture": "#eeeeee",
+        "dark_bg": "#121212",
+        "dark_text": "#e0e0e0",
+        "dark_accent": "#82b1ff",
+        "dark_texture": "#2a2a2a"
+      }
+    },
+    "hash": "{ws1:qDRRuoRD____zMzM3d3d7u7uEhIS4ODggrH_Kioq}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Boundary Values (Single property at max, rest zero)",
+    "input": {
+      "config": {
+        "typography": 27,
+        "transform": 0,
+        "align": 0,
+        "list": 0,
+        "border_style": 0,
+        "bg_texture": 0,
+        "border_width": 0,
+        "border_radius": 0,
+        "shadow_offset": 0,
+        "shadow_blur": 0,
+        "letter_spacing": 0,
+        "texture_opacity": 0,
+        "shadow_opacity": 0,
+        "checksum": 3
+      },
+      "colors": {
+        "light_bg": "#ffffff",
+        "light_text": "#000000",
+        "light_accent": "#0000ff",
+        "light_texture": "#888888",
+        "dark_bg": "#000000",
+        "dark_text": "#ffffff",
+        "dark_accent": "#00aaff",
+        "dark_texture": "#444444"
+      }
+    },
+    "hash": "{ws1:bAgfie9B____AAAAAAD_iIiIAAAA____AKr_RERE}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Mid Values (All properties at midpoint)",
+    "input": {
+      "config": {
+        "typography": 14,
+        "transform": 2,
+        "align": 2,
+        "list": 2,
+        "border_style": 5,
+        "bg_texture": 16,
+        "border_width": 3,
+        "border_radius": 8,
+        "shadow_offset": 4,
+        "shadow_blur": 4,
+        "letter_spacing": 13,
+        "texture_opacity": 2,
+        "shadow_opacity": 1,
+        "checksum": 2
+      },
+      "colors": {
+        "light_bg": "#fafafa",
+        "light_text": "#333333",
+        "light_accent": "#6366f1",
+        "light_texture": "#d4d4d8",
+        "dark_bg": "#18181b",
+        "dark_text": "#fafafa",
+        "dark_accent": "#818cf8",
+        "dark_texture": "#3f3f46"
+      }
+    },
+    "hash": "{ws1:mhoPYskB-vr6MzMzY2bx1NTYGBgb-vr6gYz4Pz9G}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Transparent Opacity Test",
+    "input": {
+      "config": {
+        "typography": 1,
+        "transform": 0,
+        "align": 0,
+        "list": 0,
+        "border_style": 0,
+        "bg_texture": 1,
+        "border_width": 0,
+        "border_radius": 0,
+        "shadow_offset": 4,
+        "shadow_blur": 0,
+        "letter_spacing": 5,
+        "texture_opacity": 3,
+        "shadow_opacity": 3,
+        "checksum": 5
+      },
+      "colors": {
+        "light_bg": "#ffffff",
+        "light_text": "#000000",
+        "light_accent": "#0000ff",
+        "light_texture": "#000000",
+        "dark_bg": "#000000",
+        "dark_text": "#ffffff",
+        "dark_accent": "#0000ff",
+        "dark_texture": "#000000"
+      }
+    },
+    "hash": "{ws1:BeMDR24D____AAAAAAD_AAAAAAAA____AAD_AAAA}",
+    "is_corruption_test": false
+  },
+  {
+    "name": "Checksum Failure Test (Same as canonical, but mutated hash)",
+    "input": {
+      "config": {
+        "typography": 5,
+        "transform": 2,
+        "align": 1,
+        "list": 3,
+        "border_style": 4,
+        "bg_texture": 10,
+        "border_width": 2,
+        "border_radius": 8,
+        "shadow_offset": 3,
+        "shadow_blur": 5,
+        "letter_spacing": 12,
+        "texture_opacity": 2,
+        "shadow_opacity": 1,
+        "checksum": 2
+      },
+      "colors": {
+        "light_bg": "#f5f5f0",
+        "light_text": "#1a1a2e",
+        "light_accent": "#0055cc",
+        "light_texture": "#dddddd",
+        "dark_bg": "#1a1a2e",
+        "dark_text": "#f5f5f0",
+        "dark_accent": "#66aaff",
+        "dark_texture": "#333344"
+      }
+    },
+    "hash": "{ws1:uP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}",
+    "is_corruption_test": true
+  }
+]
