@@ -215,24 +215,28 @@ pub fn extract(html: &str) -> Option<String> {
     }
 
     // 3. Inline
-    let re_inline = Regex::new(r#"(?:^|[^\\])(\{ws1:[A-Za-z0-9\-_]{40}\})"#).unwrap();
-    if let Some(caps) = re_inline.captures(html) {
-        return Some(caps.get(1).unwrap().as_str().to_string());
+    let re_inline = Regex::new(r"(\{ws1:[A-Za-z0-9\-_]{40}\})").unwrap();
+    let bytes = html.as_bytes();
+    for mat in re_inline.find_iter(html) {
+        if mat.start() > 0 && bytes[mat.start() - 1] == b'\\' {
+            continue;
+        }
+        return Some(mat.as_str().to_string());
     }
 
     None
 }
 
 pub fn clean(html: &str) -> String {
-    let re = Regex::new(r#"(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-_]{40}\})"#).unwrap();
-    let re_protected = Regex::new(r#"(?i)(?:<meta|&lt;meta)"#).unwrap();
+    let re = Regex::new(r#"(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})"#).unwrap();
     re.replace_all(html, |caps: &regex::Captures| {
-        let match_str = caps.get(0).unwrap().as_str();
-        if re_protected.is_match(match_str) {
-            caps.get(1).unwrap().as_str().to_string()
-        } else {
-            String::new()
+        if let Some(m) = caps.get(1) {
+            return m.as_str().to_string();
         }
+        if let Some(m) = caps.get(2) {
+            return m.as_str().to_string();
+        }
+        String::new()
     }).into_owned()
 }
 

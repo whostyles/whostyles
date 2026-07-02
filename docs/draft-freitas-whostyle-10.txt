@@ -106,11 +106,16 @@ Copyright Notice
    \{ws1:[A-Za-z0-9\-_]{40}\}
    
    Inline Escape Sequence: If a backslash `\` precedes the hash (e.g., 
-   `\{ws1:...`), parsers MUST ignore it. This serves as an escape 
+   `\{ws1:...}`), parsers MUST ignore it. This serves as an escape 
    sequence to allow citing hashes in prose without activating them.
+   Normative parsing algorithm: Implementations MUST evaluate a standard 
+   regex (without lookbehinds), and then programmatically check if the 
+   character immediately preceding the match is a backslash (`\`). If it 
+   is, the match MUST be skipped.
 
    Hash Collisions: If a document contains multiple inline hashes, the 
-   parser MUST extract and apply only the first inline hash encountered.
+   parser MUST extract and apply only the first unescaped inline hash 
+   encountered.
 
 2.6. ActivityPub Profile Discovery (Fediverse)
 
@@ -120,7 +125,7 @@ Copyright Notice
    
    Clients (e.g., alternative web interfaces, browser extensions, or mobile 
    apps) MUST inspect the author's PropertyValue attachments for a valid 
-   \{ws1:...\} hash. If multiple `PropertyValue` attachments exist, the 
+   {ws1:...} hash. If multiple `PropertyValue` attachments exist, the 
    parser MUST select the first one where the `name` field (case-insensitive) 
    equals `whostyle` or `Whostyle`.
 
@@ -134,8 +139,7 @@ Copyright Notice
    # whostyle = {ws1:CCCCCCCCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
 
    The field name "whostyle" is case-insensitive, as required by the
-   twtxt Metadata specification. The 40-character Base64 payload itself 
-   is strictly case-sensitive. Whitespace around the value MUST be
+   twtxt Metadata specification. Whitespace around the value MUST be
    stripped by the parser.
 
    Example twtxt feed header:
@@ -178,6 +182,9 @@ Copyright Notice
    Escaped Hashes: Parsers MUST search for the hash within the raw HTML 
    string before performing any entity unescaping. HTML-escaped hashes 
    (such as &#123;ws1:... or &lbrace;ws1:...) MUST NOT be extracted.
+   When an escaped hash (e.g., `\{ws1:...}`) is encountered, the cleaning 
+   process MUST remove the preceding backslash `\`, leaving the raw 
+   `{ws1:...}` hash visible in the rendered output.
 
    Markdown Interference: When extracting from text that will undergo 
    Markdown processing, parsers SHOULD extract the hash before rendering, 
@@ -202,6 +209,7 @@ Copyright Notice
 
    Each character maps to its zero-indexed position in this string
    (A=0, B=1, ..., Z=25, a=26, ..., z=51, 0=52, ..., 9=61, -=62, _=63).
+   The 40-character Base64 payload is strictly case-sensitive.
 
 3.2. Version Extensibility
 
@@ -407,8 +415,14 @@ Copyright Notice
 
    Prior to rendering, the host implementation SHOULD calculate the relative 
    luminance contrast ratio between the "background" color and all foreground 
-   colors (text, accent, and texture color) in accordance with Web Content 
-   Accessibility Guidelines (WCAG) 2.1.
+   colors (text, accent, and effective texture color) in accordance with Web 
+   Content Accessibility Guidelines (WCAG) 2.1.
+   
+   The effective texture color MUST be calculated by applying alpha 
+   compositing over the background color, using the `texture_opacity` 
+   modifier, via the formula: 
+   R_effective = (R_texture * Alpha) + (R_background * (1 - Alpha)) 
+   (applied independently to the R, G, and B channels).
 
    If the computed contrast ratio is less than 4.5:1, the host engine MUST 
    override the colors to ensure legibility. In the event of a contrast 
@@ -429,7 +443,7 @@ Copyright Notice
 
    Regular Expression Denial of Service (ReDoS): Host engines must take 
    extreme care when parsing large, unbounded user-generated text for 
-   inline hashes (as defined in Section 2.6). Implementations MUST enforce 
+   inline hashes (as defined in Section 2.5). Implementations MUST enforce 
    the following protections:
    
    1. Maximum Length Bounding: The regex MUST NOT be run on strings 

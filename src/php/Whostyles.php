@@ -222,8 +222,15 @@ class Whostyles {
         }
 
         // 3. Inline Text
-        if (preg_match('/(?<!\\\\)(\{ws1:[A-Za-z0-9\-_]{40}\})/', $html, $m)) {
-            return $m[1];
+        if (preg_match_all('/(\{ws1:[A-Za-z0-9\-_]{40}\})/', $html, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[1] as $match) {
+                $hash = $match[0];
+                $offset = $match[1];
+                if ($offset > 0 && $html[$offset - 1] === '\\') {
+                    continue;
+                }
+                return $hash;
+            }
         }
 
         return null;
@@ -231,10 +238,13 @@ class Whostyles {
 
     public static function clean(string $html): string {
         return preg_replace_callback(
-            '/((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-_]{40}\})/i',
+            '/((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})/i',
             function ($matches) {
                 if (!empty($matches[1])) {
                     return $matches[1]; // keep protected block
+                }
+                if (!empty($matches[2])) {
+                    return $matches[2]; // remove backslash from escaped hash
                 }
                 return ''; // remove inline hash
             },

@@ -252,21 +252,29 @@ func Extract(html string) string {
 	}
 
 	// 3. Inline
-	reInline := regexp.MustCompile(`(?:^|[^\\])(\{ws1:[A-Za-z0-9\-_]{40}\})`)
-	if m := reInline.FindStringSubmatch(html); len(m) > 1 {
-		return m[1]
+	reInline := regexp.MustCompile(`(\{ws1:[A-Za-z0-9\-_]{40}\})`)
+	matches := reInline.FindAllStringSubmatchIndex(html, -1)
+	for _, match := range matches {
+		if match[0] > 0 && html[match[0]-1] == '\\' {
+			continue
+		}
+		return html[match[2]:match[3]]
 	}
 
 	return ""
 }
 
 func Clean(html string) string {
-	reClean := regexp.MustCompile(`(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-_]{40}\})`)
+	reClean := regexp.MustCompile(`(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})`)
 	return reClean.ReplaceAllStringFunc(html, func(match string) string {
-		if m := regexp.MustCompile(`(?i)(?:<meta|&lt;meta)`).MatchString(match); m {
-			return match
+		submatches := reClean.FindStringSubmatch(match)
+		if len(submatches) > 1 && submatches[1] != "" {
+			return submatches[1] // preserve meta tag
 		}
-		return ""
+		if len(submatches) > 2 && submatches[2] != "" {
+			return submatches[2] // remove backslash from escaped hash
+		}
+		return "" // remove inline hash
 	})
 }
 

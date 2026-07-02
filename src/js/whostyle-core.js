@@ -192,17 +192,22 @@ export const WhostyleCore = {
         m = htmlString.match(/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})"/i);
         if (m) return m[1];
 
-        m = htmlString.match(/(?:^|[^\\])(\{ws1:[A-Za-z0-9\-_]{40}\})/);
-        if (m) return m[1];
+        const inlineRegex = /(\{ws1:[A-Za-z0-9\-_]{40}\})/g;
+        let match;
+        while ((match = inlineRegex.exec(htmlString)) !== null) {
+            if (match.index > 0 && htmlString[match.index - 1] === '\\') continue;
+            return match[1];
+        }
 
         return null;
     },
 
     clean(htmlString) {
         // Replaces raw {ws1:...} instances that are not safely inside quotes of known attributes.
-        const regex = /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-_]{40}\})/gi;
-        return htmlString.replace(regex, (match, protectedBlock, inlineHash) => {
+        const regex = /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-_]{40}\})|(\{ws1:[A-Za-z0-9\-_]{40}\})/gi;
+        return htmlString.replace(regex, (match, protectedBlock, escapedHash, inlineHash) => {
             if (protectedBlock) return match;
+            if (escapedHash) return escapedHash; // remove backslash
             return '';
         });
     },

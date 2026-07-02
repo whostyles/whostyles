@@ -529,6 +529,23 @@
             return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
         }
 
+        function getBlendedColor(fgHex, bgHex, alpha) {
+            if (fgHex === 'transparent') return bgHex;
+            const fgClean = fgHex.replace('#', '');
+            const bgClean = bgHex.replace('#', '');
+            let r_fg = parseInt(fgClean.substring(0, 2), 16), g_fg = parseInt(fgClean.substring(2, 4), 16), b_fg = parseInt(fgClean.substring(4, 6), 16);
+            let r_bg = parseInt(bgClean.substring(0, 2), 16), g_bg = parseInt(bgClean.substring(2, 4), 16), b_bg = parseInt(bgClean.substring(4, 6), 16);
+            
+            let r = Math.round((r_fg * alpha) + (r_bg * (1 - alpha)));
+            let g = Math.round((g_fg * alpha) + (g_bg * (1 - alpha)));
+            let b = Math.round((b_fg * alpha) + (b_bg * (1 - alpha)));
+            
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
         function hexToHsl(hex) {
             let r = parseInt(hex.substring(1,3), 16) / 255;
             let g = parseInt(hex.substring(3,5), 16) / 255;
@@ -639,11 +656,14 @@
             ratio = getContrastRatio(d_bg, d_accent); setInd('ind_d_accent', ratio);
             if (ratio < 4.5) { contrastErrors.push(`Accent vs Background (Dark): ${ratio.toFixed(2)}:1 <button class="btn-tool" style="display:inline-block; height:auto; padding:2px 8px; margin-left:10px; font-size: 0.8rem; line-height:1;" onclick="autoFixContrast('d_bg', 'd_accent')">Auto-fix</button>`); d_accent = d_text; showWarning = true; }
 
-            ratio = getContrastRatio(l_bg, colors.light_texture);
-            if (colors.light_texture !== 'transparent' && ratio < 4.5 && config.texture_opacity < 2) { contrastErrors.push(`Texture vs Background (Light): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
+            let textureAlpha = 1.0 - (config.texture_opacity * 0.25);
+            let effectiveLightTexture = getBlendedColor(colors.light_texture, l_bg, textureAlpha);
+            ratio = getContrastRatio(l_bg, effectiveLightTexture);
+            if (colors.light_texture !== 'transparent' && ratio < 4.5) { contrastErrors.push(`Texture vs Background (Light): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
 
-            ratio = getContrastRatio(d_bg, colors.dark_texture);
-            if (colors.dark_texture !== 'transparent' && ratio < 4.5 && config.texture_opacity < 2) { contrastErrors.push(`Texture vs Background (Dark): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
+            let effectiveDarkTexture = getBlendedColor(colors.dark_texture, d_bg, textureAlpha);
+            ratio = getContrastRatio(d_bg, effectiveDarkTexture);
+            if (colors.dark_texture !== 'transparent' && ratio < 4.5) { contrastErrors.push(`Texture vs Background (Dark): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
 
             const warningDiv = document.getElementById('contrast_warning');
             if (showWarning) {
