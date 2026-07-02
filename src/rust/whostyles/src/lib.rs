@@ -10,19 +10,20 @@ const RADIXES: &[(&str, u64)] = &[
     ("list", 5),
     ("border_style", 10),
     ("bg_texture", 32),
-    ("border_width", 7),
+    ("border_width", 17),
     ("border_radius", 17),
     ("shadow_offset", 9),
     ("shadow_blur", 9),
     ("letter_spacing", 26),
     ("texture_opacity", 4),
     ("shadow_opacity", 4),
+    ("texture_size", 4),
     ("checksum", 6),
 ];
 
 const COLOR_ORDER: &[&str] = &[
-    "light_bg", "light_text", "light_accent", "light_texture",
-    "dark_bg", "dark_text", "dark_accent", "dark_texture",
+    "light_bg", "light_text", "light_accent", "light_texture", "light_border",
+    "dark_bg", "dark_text", "dark_accent", "dark_texture", "dark_border",
 ];
 
 #[derive(Debug, PartialEq)]
@@ -90,11 +91,11 @@ fn encode_color(hex_str: &str) -> Result<String, String> {
 }
 
 pub fn calculate_checksum(config: &HashMap<String, u64>) -> u64 {
-    let weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
     let props = [
         "typography", "transform", "align", "list", "border_style",
         "bg_texture", "border_width", "border_radius", "shadow_offset",
-        "shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity",
+        "shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity", "texture_size"
     ];
     let mut sum: u64 = 0;
     for (i, prop) in props.iter().enumerate() {
@@ -105,21 +106,34 @@ pub fn calculate_checksum(config: &HashMap<String, u64>) -> u64 {
 }
 
 pub fn decode(hash_str: &str) -> Result<Decoded, String> {
-    let re = Regex::new(r"^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$").unwrap();
+    let re = Regex::new(r"^\{ws1:([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{40})\}$").unwrap();
     let caps = re.captures(hash_str).ok_or("Invalid hash format")?;
 
-    let config_b64 = caps.get(1).unwrap().as_str();
-    let colors_b64 = caps.get(2).unwrap().as_str();
-
-    let mut value = decode_base64(config_b64)?;
+    let config_b64a = caps.get(1).unwrap().as_str();
+    let config_b64b = caps.get(2).unwrap().as_str();
+    let colors_b64 = caps.get(3).unwrap().as_str();
 
     let mut config = HashMap::new();
-    for (key, radix) in RADIXES {
-        config.insert(key.to_string(), value % radix);
-        value /= radix;
+
+    let mut value_a = decode_base64(config_b64a)?;
+    let group_a_props = ["typography", "transform", "align", "list", "border_style", "bg_texture", "border_width"];
+    for key in group_a_props {
+        let radix = RADIXES.iter().find(|(k, _)| *k == key).map(|(_, v)| *v).unwrap_or(1);
+        config.insert(key.to_string(), value_a % radix);
+        value_a /= radix;
+    }
+    if value_a != 0 {
+        return Err("Structurally invalid (residue must be 0)".to_string());
     }
 
-    if value != 0 {
+    let mut value_b = decode_base64(config_b64b)?;
+    let group_b_props = ["border_radius", "shadow_offset", "shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity", "texture_size", "checksum"];
+    for key in group_b_props {
+        let radix = RADIXES.iter().find(|(k, _)| *k == key).map(|(_, v)| *v).unwrap_or(1);
+        config.insert(key.to_string(), value_b % radix);
+        value_b /= radix;
+    }
+    if value_b != 0 {
         return Err("Structurally invalid (residue must be 0)".to_string());
     }
 
@@ -152,26 +166,36 @@ pub fn encode(config: &HashMap<String, u64>, colors: &HashMap<String, String>) -
     let mut config_copy = config.clone();
     config_copy.insert("checksum".to_string(), calculate_checksum(&config_copy));
 
-    let mut value: u64 = 0;
-    for (key, radix) in RADIXES.iter().rev() {
-        let val = config_copy.get(*key).copied().unwrap_or(0);
-        value = value * radix + val;
+    let group_a_props = ["border_width", "bg_texture", "border_style", "list", "align", "transform", "typography"];
+    let mut value_a: u64 = 0;
+    for key in group_a_props {
+        let radix = RADIXES.iter().find(|(k, _)| *k == key).map(|(_, v)| *v).unwrap_or(1);
+        let val = config_copy.get(key).copied().unwrap_or(0);
+        value_a = value_a * radix + val;
     }
+    let config_b64a = encode_base64(value_a, 4);
 
-    let config_b64 = encode_base64(value, 8);
+    let group_b_props = ["checksum", "texture_size", "shadow_opacity", "texture_opacity", "letter_spacing", "shadow_blur", "shadow_offset", "border_radius"];
+    let mut value_b: u64 = 0;
+    for key in group_b_props {
+        let radix = RADIXES.iter().find(|(k, _)| *k == key).map(|(_, v)| *v).unwrap_or(1);
+        let val = config_copy.get(key).copied().unwrap_or(0);
+        value_b = value_b * radix + val;
+    }
+    let config_b64b = encode_base64(value_b, 4);
 
-    let mut colors_b64 = String::with_capacity(32);
+    let mut colors_b64 = String::with_capacity(40);
     for key in COLOR_ORDER {
         let color = colors.get(*key).map(|s| s.as_str()).unwrap_or("#000000");
         let encoded_c = encode_color(color)?;
         colors_b64.push_str(&encoded_c);
     }
 
-    Ok(format!("{{ws1:{}{}}}", config_b64, colors_b64))
+    Ok(format!("{{ws1:{}{}{}}}", config_b64a, config_b64b, colors_b64))
 }
 
 pub fn extract_from_headers(headers: &HashMap<String, String>) -> Option<String> {
-    let re = Regex::new(r"^\{ws1:[A-Za-z0-9\-.]{40}\}$").unwrap();
+    let re = Regex::new(r"^\{ws1:[A-Za-z0-9\-.]{48}\}$").unwrap();
     for (k, v) in headers {
         if k.to_lowercase() == "x-whostyle" {
             let val = v.trim();
@@ -187,7 +211,7 @@ pub fn extract_from_twtxt(feed_string: &str) -> Option<String> {
     if feed_string.is_empty() {
         return None;
     }
-    let re = Regex::new(r"(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$").unwrap();
+    let re = Regex::new(r"(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{48}\})\s*$").unwrap();
     for line in feed_string.lines() {
         let trimmed = line.trim();
         if trimmed.is_empty() || !trimmed.starts_with('#') {
@@ -203,19 +227,19 @@ pub fn extract_from_twtxt(feed_string: &str) -> Option<String> {
 
 pub fn extract(html: &str) -> Option<String> {
     // 1. Meta Tag
-    let re_meta = Regex::new(r#"(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{40}\})["']?"#).unwrap();
+    let re_meta = Regex::new(r#"(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{48}\})["']?"#).unwrap();
     if let Some(caps) = re_meta.captures(html) {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }
 
     // 2. JSON-LD
-    let re_json = Regex::new(r#"(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})""#).unwrap();
+    let re_json = Regex::new(r#"(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{48}\})""#).unwrap();
     if let Some(caps) = re_json.captures(html) {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }
 
     // 3. Inline
-    let re_inline = Regex::new(r"(\{ws1:[A-Za-z0-9\-.]{40}\})").unwrap();
+    let re_inline = Regex::new(r"(\{ws1:[A-Za-z0-9\-.]{48}\})").unwrap();
     let bytes = html.as_bytes();
     for mat in re_inline.find_iter(html) {
         if mat.start() > 0 && bytes[mat.start() - 1] == b'\\' {
@@ -228,7 +252,7 @@ pub fn extract(html: &str) -> Option<String> {
 }
 
 pub fn clean(html: &str) -> String {
-    let re = Regex::new(r#"(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})"#).unwrap();
+    let re = Regex::new(r#"(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{48}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{48}\})|(\{ws1:[A-Za-z0-9\-.]{48}\})"#).unwrap();
     re.replace_all(html, |caps: &regex::Captures| {
         if let Some(m) = caps.get(1) {
             return m.as_str().to_string();
@@ -275,13 +299,13 @@ const TYPOGRAPHY: &[&str] = &[
     "andale-mono", "sf-mono", "cascadia-code",
 ];
 const TEXTURES: &[&str] = &[
-    "none", "noise", "stripes-v", "stripes-h", "stripes-d-right",
-    "stripes-d-left", "pinstripes", "wavy-lines", "zigzag-lines", "grid-standard",
-    "grid-fine", "grid-isometric", "crosses", "crosshatch", "checkerboard",
+    "none", "weave", "stripes-v", "stripes-h", "stripes-d-right",
+    "stripes-d-left", "fine-grain", "zigzag-lines", "grid-standard",
+    "grid-isometric", "crosses", "crosshatch", "checkerboard",
     "checkerboard-tilt", "triangles", "diamonds", "argyle", "honeycomb",
-    "chevron", "houndstooth", "brick-wall", "dots-sparse", "polka-dots",
+    "chevron", "houndstooth", "brick-wall", "brick-dots", "polka-dots",
     "circles-concentric", "scallop", "waves", "woven", "denim",
-    "tartan", "confetti",
+    "tartan", "soft-dapple", "confetti", "reserved",
 ];
 
 fn get_luminance(hex_str: &str) -> f64 {
@@ -356,7 +380,7 @@ pub fn generate_attributes(hash_str: &str) -> String {
 
         let bwidth = format!("{}px", config.get("border_width").unwrap_or(&0));
         let bradius = format!("{}px", config.get("border_radius").unwrap_or(&0));
-        let soffset = format!("{}px", (*config.get("shadow_offset").unwrap_or(&4) as i64) - 4);
+        let soffset = format!("{}px", *config.get("shadow_offset").unwrap_or(&4) as i64);
         let sblur = format!("{}px", config.get("shadow_blur").unwrap_or(&0));
         
         let ls = *config.get("letter_spacing").unwrap_or(&5) as f64;
@@ -366,33 +390,40 @@ pub fn generate_attributes(hash_str: &str) -> String {
         let mut c_light_text = colors.get("light_text").cloned().unwrap_or_else(|| "#000000".to_string());
         let mut c_light_accent = colors.get("light_accent").cloned().unwrap_or_else(|| "#0000ff".to_string());
         let mut c_light_texture = colors.get("light_texture").cloned().unwrap_or_else(|| "transparent".to_string());
+        let mut c_light_border = colors.get("light_border").cloned().unwrap_or_else(|| "#cccccc".to_string());
 
-        if get_contrast(&c_light_bg, &c_light_text) < 4.5 || get_contrast(&c_light_bg, &c_light_accent) < 4.5 {
+        let opacity_idx = *config.get("texture_opacity").unwrap_or(&0);
+        let tsizes = ["8px", "16px", "24px", "36px"];
+        let tsize = tsizes[*config.get("texture_size").unwrap_or(&0) as usize];
+        let opacities = ["1.0", "0.75", "0.50", "0.25"];
+
+        if get_contrast(&c_light_bg, &c_light_text) < 4.5 || 
+           get_contrast(&c_light_bg, &c_light_accent) < 4.5 ||
+           get_contrast(&c_light_bg, &hex_to_rgba(&c_light_texture, opacity_idx)) < 4.5 {
             c_light_bg = "#ffffff".to_string();
             c_light_text = "#000000".to_string();
             c_light_accent = "#0000ff".to_string();
             c_light_texture = "transparent".to_string();
+            c_light_border = "#cccccc".to_string();
         }
 
         let mut c_dark_bg = colors.get("dark_bg").cloned().unwrap_or_else(|| "#000000".to_string());
         let mut c_dark_text = colors.get("dark_text").cloned().unwrap_or_else(|| "#ffffff".to_string());
         let mut c_dark_accent = colors.get("dark_accent").cloned().unwrap_or_else(|| "#00aaff".to_string());
         let mut c_dark_texture = colors.get("dark_texture").cloned().unwrap_or_else(|| "transparent".to_string());
+        let mut c_dark_border = colors.get("dark_border").cloned().unwrap_or_else(|| "#555555".to_string());
 
-        if get_contrast(&c_dark_bg, &c_dark_text) < 4.5 || get_contrast(&c_dark_bg, &c_dark_accent) < 4.5 {
+        if get_contrast(&c_dark_bg, &c_dark_text) < 4.5 || 
+           get_contrast(&c_dark_bg, &c_dark_accent) < 4.5 ||
+           get_contrast(&c_dark_bg, &hex_to_rgba(&c_dark_texture, opacity_idx)) < 4.5 {
             c_dark_bg = "#000000".to_string();
             c_dark_text = "#ffffff".to_string();
             c_dark_accent = "#00aaff".to_string();
             c_dark_texture = "transparent".to_string();
+            c_dark_border = "#555555".to_string();
         }
 
-        let opacity_idx = *config.get("texture_opacity").unwrap_or(&0);
-        c_light_texture = hex_to_rgba(&c_light_texture, opacity_idx);
-        c_dark_texture = hex_to_rgba(&c_dark_texture, opacity_idx);
-
         let shadow_opacity_idx = *config.get("shadow_opacity").unwrap_or(&0);
-        let c_light_shadow = hex_to_rgba(&c_light_accent, shadow_opacity_idx);
-        let c_dark_shadow = hex_to_rgba(&c_dark_accent, shadow_opacity_idx);
 
         let styles = vec![
             format!("--ws-transform: {}", transform),
@@ -404,16 +435,21 @@ pub fn generate_attributes(hash_str: &str) -> String {
             format!("--ws-soffset: {}", soffset),
             format!("--ws-sblur: {}", sblur),
             format!("--ws-lspacing: {}", lspacing),
+            format!("--ws-topacity: {}", opacities[opacity_idx as usize]),
+            format!("--ws-sopacity: {}", opacities[shadow_opacity_idx as usize]),
+            format!("--ws-tsize: {}", tsize),
             format!("--ws-light-bg: {}", c_light_bg),
             format!("--ws-light-text: {}", c_light_text),
             format!("--ws-light-accent: {}", c_light_accent),
             format!("--ws-light-texture: {}", c_light_texture),
-            format!("--ws-light-shadow: {}", c_light_shadow),
+            format!("--ws-light-border: {}", c_light_border),
+            format!("--ws-light-shadow: {}", hex_to_rgba(&c_light_text, shadow_opacity_idx)),
             format!("--ws-dark-bg: {}", c_dark_bg),
             format!("--ws-dark-text: {}", c_dark_text),
             format!("--ws-dark-accent: {}", c_dark_accent),
             format!("--ws-dark-texture: {}", c_dark_texture),
-            format!("--ws-dark-shadow: {}", c_dark_shadow),
+            format!("--ws-dark-border: {}", c_dark_border),
+            format!("--ws-dark-shadow: {}", hex_to_rgba(&c_dark_text, shadow_opacity_idx)),
         ];
 
         format!("class=\"{}\" style=\"{};\"", class_names.join(" "), styles.join("; "))

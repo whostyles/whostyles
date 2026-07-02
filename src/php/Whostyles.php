@@ -20,13 +20,14 @@ class Whostyles {
         'list' => 5,
         'border_style' => 10,
         'bg_texture' => 32,
-        'border_width' => 7,
+        'border_width' => 17,
         'border_radius' => 17,
         'shadow_offset' => 9,
         'shadow_blur' => 9,
         'letter_spacing' => 26,
         'texture_opacity' => 4,
         'shadow_opacity' => 4,
+        'texture_size' => 4,
         'checksum' => 6
     ];
 
@@ -76,11 +77,11 @@ class Whostyles {
     }
 
     public static function calculateChecksum(array $config): int {
-        $weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+        $weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
         $props = [
             'typography', 'transform', 'align', 'list', 'border_style',
             'bg_texture', 'border_width', 'border_radius', 'shadow_offset',
-            'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity'
+            'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity', 'texture_size'
         ];
         $sum = 0;
         foreach ($props as $i => $prop) {
@@ -90,27 +91,35 @@ class Whostyles {
     }
 
     public static function decode(string $hash): ?array {
-        if (!preg_match('/^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$/', $hash, $matches)) {
+        if (!preg_match('/^\{ws1:([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{40})\}$/', $hash, $matches)) {
             return null;
         }
 
-        $configB64 = $matches[1];
-        $colorsB64 = $matches[2];
+        $configB64A = $matches[1];
+        $configB64B = $matches[2];
+        $colorsB64 = $matches[3];
+        $config = [];
 
         try {
-            $value = self::decodeBase64($configB64);
+            $valueA = self::decodeBase64($configB64A);
+            $groupAProps = ['typography', 'transform', 'align', 'list', 'border_style', 'bg_texture', 'border_width'];
+            foreach ($groupAProps as $key) {
+                $radix = self::RADIXES[$key];
+                $config[$key] = $valueA % $radix;
+                $valueA = intdiv($valueA, $radix);
+            }
+            if ($valueA !== 0) return null;
+
+            $valueB = self::decodeBase64($configB64B);
+            $groupBProps = ['border_radius', 'shadow_offset', 'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity', 'texture_size', 'checksum'];
+            foreach ($groupBProps as $key) {
+                $radix = self::RADIXES[$key];
+                $config[$key] = $valueB % $radix;
+                $valueB = intdiv($valueB, $radix);
+            }
+            if ($valueB !== 0) return null;
         } catch (\Exception $e) {
             return null;
-        }
-
-        $config = [];
-        foreach (self::RADIXES as $key => $radix) {
-            $config[$key] = $value % $radix;
-            $value = intdiv($value, $radix);
-        }
-
-        if ($value !== 0) {
-            return null; // Structurally invalid (residue must be 0)
         }
 
         $expectedChecksum = self::calculateChecksum($config);
@@ -120,8 +129,8 @@ class Whostyles {
 
         $colors = [];
         $colorOrder = [
-            'light_bg', 'light_text', 'light_accent', 'light_texture',
-            'dark_bg', 'dark_text', 'dark_accent', 'dark_texture'
+            'light_bg', 'light_text', 'light_accent', 'light_texture', 'light_border',
+            'dark_bg', 'dark_text', 'dark_accent', 'dark_texture', 'dark_border'
         ];
         
         for ($i = 0; $i < count($colorOrder); $i++) {
@@ -151,16 +160,23 @@ class Whostyles {
 
         $config['checksum'] = self::calculateChecksum($config);
 
-        $value = 0;
-        foreach ($order as $key) {
-            $value = $value * self::RADIXES[$key] + $config[$key];
+        $groupAProps = ['border_width', 'bg_texture', 'border_style', 'list', 'align', 'transform', 'typography'];
+        $valueA = 0;
+        foreach ($groupAProps as $key) {
+            $valueA = $valueA * self::RADIXES[$key] + $config[$key];
         }
-        
-        $configB64 = self::encodeBase64($value, 8);
+        $configB64A = self::encodeBase64($valueA, 4);
+
+        $groupBProps = ['checksum', 'texture_size', 'shadow_opacity', 'texture_opacity', 'letter_spacing', 'shadow_blur', 'shadow_offset', 'border_radius'];
+        $valueB = 0;
+        foreach ($groupBProps as $key) {
+            $valueB = $valueB * self::RADIXES[$key] + $config[$key];
+        }
+        $configB64B = self::encodeBase64($valueB, 4);
         
         $colorOrder = [
-            'light_bg', 'light_text', 'light_accent', 'light_texture',
-            'dark_bg', 'dark_text', 'dark_accent', 'dark_texture'
+            'light_bg', 'light_text', 'light_accent', 'light_texture', 'light_border',
+            'dark_bg', 'dark_text', 'dark_accent', 'dark_texture', 'dark_border'
         ];
         
         $colorsB64 = '';
@@ -171,12 +187,12 @@ class Whostyles {
             $colorsB64 .= self::encodeColor($colors[$key]);
         }
         
-        return "{ws1:{$configB64}{$colorsB64}}";
+        return "{ws1:{$configB64A}{$configB64B}{$colorsB64}}";
     }
 
     public static function extractFromHeaders(?array $headers = null): ?string {
         if ($headers === null) {
-            if (isset($_SERVER['HTTP_X_WHOSTYLE']) && preg_match('/^\{ws1:[A-Za-z0-9\-.]{40}\}$/', trim($_SERVER['HTTP_X_WHOSTYLE']))) {
+            if (isset($_SERVER['HTTP_X_WHOSTYLE']) && preg_match('/^\{ws1:[A-Za-z0-9\-.]{48}\}$/', trim($_SERVER['HTTP_X_WHOSTYLE']))) {
                 return trim($_SERVER['HTTP_X_WHOSTYLE']);
             }
             // For environments where getallheaders() is available
@@ -189,7 +205,7 @@ class Whostyles {
 
         if (is_array($headers)) {
             foreach ($headers as $key => $value) {
-                if (strtolower($key) === 'x-whostyle' && is_string($value) && preg_match('/^\{ws1:[A-Za-z0-9\-.]{40}\}$/', trim($value))) {
+                if (strtolower($key) === 'x-whostyle' && is_string($value) && preg_match('/^\{ws1:[A-Za-z0-9\-.]{48}\}$/', trim($value))) {
                     return trim($value);
                 }
             }
@@ -203,7 +219,7 @@ class Whostyles {
             $line = trim($line);
             if (strlen($line) === 0 || $line[0] !== '#') continue;
             $content = ltrim(substr($line, 1));
-            if (preg_match('/^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$/i', $content, $m)) {
+            if (preg_match('/^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{48}\})\s*$/i', $content, $m)) {
                 return $m[1];
             }
         }
@@ -212,17 +228,17 @@ class Whostyles {
 
     public static function extract(string $html): ?string {
         // 1. Meta Tag
-        if (preg_match('/<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-.]{40}\})["\']?/i', $html, $m)) {
+        if (preg_match('/<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-.]{48}\})["\']?/i', $html, $m)) {
             return $m[1];
         }
 
         // 2. JSON-LD
-        if (preg_match('/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"/i', $html, $m)) {
+        if (preg_match('/"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{48}\})"/i', $html, $m)) {
             return $m[1];
         }
 
         // 3. Inline Text
-        if (preg_match_all('/(\{ws1:[A-Za-z0-9\-.]{40}\})/', $html, $matches, PREG_OFFSET_CAPTURE)) {
+        if (preg_match_all('/(\{ws1:[A-Za-z0-9\-.]{48}\})/', $html, $matches, PREG_OFFSET_CAPTURE)) {
             foreach ($matches[1] as $match) {
                 $hash = $match[0];
                 $offset = $match[1];
@@ -238,7 +254,7 @@ class Whostyles {
 
     public static function clean(string $html): string {
         return preg_replace_callback(
-            '/((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})/i',
+            '/((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{48}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\\\(\{ws1:[A-Za-z0-9\-.]{48}\})|(\{ws1:[A-Za-z0-9\-.]{48}\})/i',
             function ($matches) {
                 if (!empty($matches[1])) {
                     return $matches[1]; // keep protected block
@@ -284,13 +300,13 @@ class Whostyles {
             'andale-mono', 'sf-mono', 'cascadia-code'
         ],
         'textures' => [
-            'none', 'noise', 'stripes-v', 'stripes-h', 'stripes-d-right',
-            'stripes-d-left', 'pinstripes', 'wavy-lines', 'zigzag-lines', 'grid-standard',
-            'grid-fine', 'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
+            'none', 'weave', 'stripes-v', 'stripes-h', 'stripes-d-right',
+            'stripes-d-left', 'fine-grain', 'zigzag-lines', 'grid-standard',
+            'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
             'checkerboard-tilt', 'triangles', 'diamonds', 'argyle', 'honeycomb',
-            'chevron', 'houndstooth', 'brick-wall', 'dots-sparse', 'polka-dots',
+            'chevron', 'houndstooth', 'brick-wall', 'brick-dots', 'polka-dots',
             'circles-concentric', 'scallop', 'waves', 'woven', 'denim',
-            'tartan', 'confetti'
+            'tartan', 'soft-dapple', 'confetti', 'reserved'
         ]
     ];
 
@@ -349,7 +365,7 @@ class Whostyles {
         
         $bwidth = $config['border_width'] . 'px';
         $bradius = $config['border_radius'] . 'px';
-        $soffset = ($config['shadow_offset'] - 4) . 'px';
+        $soffset = $config['shadow_offset'] . 'px';
         $sblur = $config['shadow_blur'] . 'px';
         $lspacing = number_format($config['letter_spacing'] * 0.1 - 0.5, 1, '.', '') . 'px';
 
@@ -357,33 +373,36 @@ class Whostyles {
         $l_text = $colors['light_text'];
         $l_accent = $colors['light_accent'];
         $l_texture = $colors['light_texture'];
+        $l_border = $colors['light_border'];
 
-        if (self::getContrast($l_bg, $l_text) < 4.5 || self::getContrast($l_bg, $l_accent) < 4.5) {
+        if (self::getContrast($l_bg, $l_text) < 4.5 || 
+            self::getContrast($l_bg, $l_accent) < 4.5 ||
+            self::getContrast($l_bg, self::hexToRgba($l_texture, $config['texture_opacity'])) < 4.5) {
             $l_bg = '#ffffff';
             $l_text = '#000000';
             $l_accent = '#0000ff';
             $l_texture = 'transparent';
+            $l_border = '#cccccc';
         }
 
         $d_bg = $colors['dark_bg'];
         $d_text = $colors['dark_text'];
         $d_accent = $colors['dark_accent'];
         $d_texture = $colors['dark_texture'];
+        $d_border = $colors['dark_border'];
 
-        if (self::getContrast($d_bg, $d_text) < 4.5 || self::getContrast($d_bg, $d_accent) < 4.5) {
+        if (self::getContrast($d_bg, $d_text) < 4.5 || 
+            self::getContrast($d_bg, $d_accent) < 4.5 ||
+            self::getContrast($d_bg, self::hexToRgba($d_texture, $config['texture_opacity'])) < 4.5) {
             $d_bg = '#000000';
             $d_text = '#ffffff';
             $d_accent = '#00aaff';
             $d_texture = 'transparent';
+            $d_border = '#555555';
         }
 
-        // Apply Opacity to Textures
-        $l_texture = self::hexToRgba($l_texture, $config['texture_opacity']);
-        $d_texture = self::hexToRgba($d_texture, $config['texture_opacity']);
-
-        // Compute shadow colors
-        $l_shadow = self::hexToRgba($l_accent, $config['shadow_opacity']);
-        $d_shadow = self::hexToRgba($d_accent, $config['shadow_opacity']);
+        $opacities = ['1.0', '0.75', '0.50', '0.25'];
+        $tsize_map = ['8px', '16px', '24px', '36px'];
 
         $styles = [
             "--ws-transform: {$transform}",
@@ -395,16 +414,21 @@ class Whostyles {
             "--ws-soffset: {$soffset}",
             "--ws-sblur: {$sblur}",
             "--ws-lspacing: {$lspacing}",
+            "--ws-topacity: {$opacities[$config['texture_opacity']]}",
+            "--ws-sopacity: {$opacities[$config['shadow_opacity']]}",
+            "--ws-tsize: {$tsize_map[$config['texture_size']]}",
             "--ws-light-bg: {$l_bg}",
             "--ws-light-text: {$l_text}",
             "--ws-light-accent: {$l_accent}",
             "--ws-light-texture: {$l_texture}",
-            "--ws-light-shadow: {$l_shadow}",
+            "--ws-light-border: {$l_border}",
+            "--ws-light-shadow: " . self::hexToRgba($l_text, $config['shadow_opacity']),
             "--ws-dark-bg: {$d_bg}",
             "--ws-dark-text: {$d_text}",
             "--ws-dark-accent: {$d_accent}",
             "--ws-dark-texture: {$d_texture}",
-            "--ws-dark-shadow: {$d_shadow}"
+            "--ws-dark-border: {$d_border}",
+            "--ws-dark-shadow: " . self::hexToRgba($d_text, $config['shadow_opacity'])
         ];
 
         $classes = implode(' ', $classNames);

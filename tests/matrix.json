@@ -16,20 +16,23 @@
         "letter_spacing": 12,
         "texture_opacity": 2,
         "shadow_opacity": 1,
-        "checksum": 2
+        "texture_size": 1,
+        "checksum": 4
       },
       "colors": {
         "light_bg": "#f5f5f0",
         "light_text": "#1a1a2e",
         "light_accent": "#0055cc",
         "light_texture": "#dddddd",
+        "light_border": "#cccccc",
         "dark_bg": "#1a1a2e",
         "dark_text": "#f5f5f0",
         "dark_accent": "#66aaff",
-        "dark_texture": "#333344"
+        "dark_texture": "#333344",
+        "dark_border": "#555566"
       }
     },
-    "hash": "{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}",
+    "hash": "{ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}",
     "is_corruption_test": false
   },
   {
@@ -49,6 +52,7 @@
         "letter_spacing": 0,
         "texture_opacity": 0,
         "shadow_opacity": 0,
+        "texture_size": 0,
         "checksum": 0
       },
       "colors": {
@@ -56,13 +60,15 @@
         "light_text": "#000000",
         "light_accent": "#000000",
         "light_texture": "#000000",
+        "light_border": "#000000",
         "dark_bg": "#000000",
         "dark_text": "#000000",
         "dark_accent": "#000000",
-        "dark_texture": "#000000"
+        "dark_texture": "#000000",
+        "dark_border": "#000000"
       }
     },
-    "hash": "{ws1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}",
+    "hash": "{ws1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}",
     "is_corruption_test": false
   },
   {
@@ -75,27 +81,30 @@
         "list": 4,
         "border_style": 9,
         "bg_texture": 31,
-        "border_width": 6,
+        "border_width": 16,
         "border_radius": 16,
         "shadow_offset": 8,
         "shadow_blur": 8,
         "letter_spacing": 25,
         "texture_opacity": 3,
         "shadow_opacity": 3,
-        "checksum": 1
+        "texture_size": 3,
+        "checksum": 5
       },
       "colors": {
         "light_bg": "#ffffff",
         "light_text": "#ffffff",
         "light_accent": "#ffffff",
         "light_texture": "#ffffff",
+        "light_border": "#ffffff",
         "dark_bg": "#ffffff",
         "dark_text": "#ffffff",
         "dark_accent": "#ffffff",
-        "dark_texture": "#ffffff"
+        "dark_texture": "#ffffff",
+        "dark_border": "#ffffff"
       }
     },
-    "hash": "{ws1:...UspTB................................}",
+    "hash": "{ws1:..eu.bc0........................................}",
     "is_corruption_test": false
   },
   {
@@ -115,20 +124,23 @@
         "letter_spacing": 5,
         "texture_opacity": 0,
         "shadow_opacity": 2,
-        "checksum": 4
+        "texture_size": 2,
+        "checksum": 2
       },
       "colors": {
         "light_bg": "#f8f9fa",
         "light_text": "#212529",
         "light_accent": "#0d6efd",
         "light_texture": "#e9ecef",
+        "light_border": "#dee2e6",
         "dark_bg": "#212529",
         "dark_text": "#f8f9fa",
         "dark_accent": "#0d6efd",
-        "dark_texture": "#343a40"
+        "dark_texture": "#343a40",
+        "dark_border": "#495057"
       }
     },
-    "hash": "{ws1:BakjQx8C-Pn6ISUpDW796ezvISUp-Pn6DW79NDpA}",
+    "hash": "{ws1:BaiDyS-W-Pn6ISUpDW796ezv3uLmISUp-Pn6DW79NDpASVBX}",
     "is_corruption_test": false
   },
   {
@@ -148,6 +160,7 @@
         "letter_spacing": 5,
         "texture_opacity": 0,
         "shadow_opacity": 0,
+        "texture_size": 0,
         "checksum": 5
       },
       "colors": {
@@ -155,13 +168,15 @@
         "light_text": "#cccccc",
         "light_accent": "#dddddd",
         "light_texture": "#eeeeee",
+        "light_border": "#cccccc",
         "dark_bg": "#121212",
         "dark_text": "#e0e0e0",
         "dark_accent": "#82b1ff",
-        "dark_texture": "#2a2a2a"
+        "dark_texture": "#2a2a2a",
+        "dark_border": "#e0e0e0"
       }
     },
-    "hash": "{ws1:qDRRuoRD....zMzM3d3d7u7uEhIS4ODggrH.Kioq}",
+    "hash": "{ws1:qDAApuur....zMzM3d3d7u7uzMzMEhIS4ODggrH.Kioq4ODg}",
     "is_corruption_test": false
   },
   {
@@ -181,6 +196,7 @@
         "letter_spacing": 0,
         "texture_opacity": 0,
         "shadow_opacity": 0,
+        "texture_size": 0,
         "checksum": 3
       },
       "colors": {
@@ -188,13 +204,15 @@
         "light_text": "#000000",
         "light_accent": "#0000ff",
         "light_texture": "#888888",
+        "light_border": "#888888",
         "dark_bg": "#000000",
         "dark_text": "#ffffff",
         "dark_accent": "#00aaff",
-        "dark_texture": "#444444"
+        "dark_texture": "#444444",
+        "dark_border": "#444444"
       }
     },
-    "hash": "{ws1:bAgfie9B....AAAAAAD.iIiIAAAA....AKr.RERE}",
+    "hash": "{ws1:bAAAAOOa....AAAAAAD.iIiIiIiIAAAA....AKr.RERERERE}",
     "is_corruption_test": false
   },
   {
@@ -207,27 +225,30 @@
         "list": 2,
         "border_style": 5,
         "bg_texture": 16,
-        "border_width": 3,
+        "border_width": 8,
         "border_radius": 8,
         "shadow_offset": 4,
         "shadow_blur": 4,
         "letter_spacing": 13,
         "texture_opacity": 2,
         "shadow_opacity": 1,
-        "checksum": 2
+        "texture_size": 2,
+        "checksum": 5
       },
       "colors": {
         "light_bg": "#fafafa",
         "light_text": "#333333",
         "light_accent": "#6366f1",
         "light_texture": "#d4d4d8",
+        "light_border": "#a1a1aa",
         "dark_bg": "#18181b",
         "dark_text": "#fafafa",
         "dark_accent": "#818cf8",
-        "dark_texture": "#3f3f46"
+        "dark_texture": "#3f3f46",
+        "dark_border": "#52525b"
       }
     },
-    "hash": "{ws1:mhoPYskB-vr6MzMzY2bx1NTYGBgb-vr6gYz4Pz9G}",
+    "hash": "{ws1:mhSX5t9w-vr6MzMzY2bx1NTYoaGqGBgb-vr6gYz4Pz9GUlJb}",
     "is_corruption_test": false
   },
   {
@@ -247,6 +268,7 @@
         "letter_spacing": 5,
         "texture_opacity": 3,
         "shadow_opacity": 3,
+        "texture_size": 0,
         "checksum": 5
       },
       "colors": {
@@ -254,13 +276,15 @@
         "light_text": "#000000",
         "light_accent": "#0000ff",
         "light_texture": "#000000",
+        "light_border": "#000000",
         "dark_bg": "#000000",
         "dark_text": "#ffffff",
         "dark_accent": "#0000ff",
-        "dark_texture": "#000000"
+        "dark_texture": "#000000",
+        "dark_border": "#000000"
       }
     },
-    "hash": "{ws1:BeMDR24D....AAAAAAD.AAAAAAAA....AAD.AAAA}",
+    "hash": "{ws1:BeFAv1xt....AAAAAAD.AAAAAAAAAAAA....AAD.AAAAAAAA}",
     "is_corruption_test": false
   },
   {
@@ -280,20 +304,23 @@
         "letter_spacing": 12,
         "texture_opacity": 2,
         "shadow_opacity": 1,
-        "checksum": 2
+        "texture_size": 1,
+        "checksum": 4
       },
       "colors": {
         "light_bg": "#f5f5f0",
         "light_text": "#1a1a2e",
         "light_accent": "#0055cc",
         "light_texture": "#dddddd",
+        "light_border": "#cccccc",
         "dark_bg": "#1a1a2e",
         "dark_text": "#f5f5f0",
         "dark_accent": "#66aaff",
-        "dark_texture": "#333344"
+        "dark_texture": "#333344",
+        "dark_border": "#555566"
       }
     },
-    "hash": "{ws1:uP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}",
+    "hash": "{ws1:uPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}",
     "is_corruption_test": true
   }
 ]

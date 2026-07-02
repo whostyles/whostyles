@@ -98,7 +98,7 @@ Copyright Notice
    {
      "@context": "https://schema.org",
      "@type": "Article",
-     "whostyle": "{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}"
+     "whostyle": "{ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}"
    }
    </script>
 
@@ -109,15 +109,17 @@ Copyright Notice
    directly in the body text.
    
    Host engines MUST scan the raw text for the regex pattern: 
-   \{ws1:[A-Za-z0-9\-.]{40}\}
+   \{ws1:[A-Za-z0-9\-.]{48}\}
    
    Inline Escape Sequence: If a backslash `\` precedes the hash (e.g., 
    `\{ws1:...}`), parsers MUST ignore it. This serves as an escape 
    sequence to allow citing hashes in prose without activating them.
    Normative parsing algorithm: Implementations MUST evaluate a standard 
-   regex (without lookbehinds), and then programmatically check if the 
+   regex, and then programmatically check if the 
    character immediately preceding the match is a backslash (`\`). If it 
-   is, the match MUST be skipped.
+   is, the match MUST be skipped. Implementations MUST NOT use regex 
+   lookbehinds (e.g., `(?<!\\)`) to implement this rule, as they are not 
+   supported by engines such as RE2, Rust's `regex`, or Go's `regexp`.
 
    Hash Collisions: If a document contains multiple inline hashes, the 
    parser MUST extract and apply only the first unescaped inline hash 
@@ -152,7 +154,7 @@ Copyright Notice
    # nick = user
    # url = https://example.com/twtxt.txt
    # avatar = https://example.com/avatar.png
-   # whostyle = {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}
+   # whostyle = {ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}
 
    Note: twtxt feed discovery is a standalone extraction mechanism,
    independent of the HTML discovery precedence chain (Section 2.1). 
@@ -179,7 +181,7 @@ Copyright Notice
    to this HTML cleanup regex.
 
    Regex Pattern:
-   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-.]{40}\})/i
+   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{48}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-.]{48}\})/i
 
    Replacement Rule:
    If Group 1 matches, replace with Group 1 (preserve meta tag).
@@ -190,17 +192,18 @@ Copyright Notice
    (such as &#123;ws1:... or &lbrace;ws1:...) MUST NOT be extracted.
    When an escaped hash (e.g., `\{ws1:...}`) is encountered, the cleaning 
    process MUST remove the preceding backslash `\`, leaving the raw 
-   `{ws1:...}` hash visible in the rendered output.
+   `{ws1:...}` hash visible in the rendered output for the end user.
 
 3.  Hash Specification
 
-   A Whostyle Hash MUST consist of exactly 46 characters, formatted as:
-   {ws1:CCCCCCCCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
+   A Whostyle Hash MUST consist of exactly 54 characters, formatted as:
+   {ws1:AAAABBBBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
 
    Where:
    - "{ws1:" (5 chars) is the protocol prefix.
-   - "C" (8 chars) is the Base64 representation of the integer Configuration state.
-   - "x" (32 chars) is the Base64 representation of the 8 Theme Colors.
+   - "AAAA" (4 chars) is the Base64 representation of Configuration Group A.
+   - "BBBB" (4 chars) is the Base64 representation of Configuration Group B.
+   - "x" (40 chars) is the Base64 representation of the 10 Theme Colors.
    - "}" (1 char) is the suffix.
 
 3.1. Base64 Alphabet
@@ -210,7 +213,8 @@ Copyright Notice
 
    Each character maps to its zero-indexed position in this string
    (A=0, B=1, ..., Z=25, a=26, ..., z=51, 0=52, ..., 9=61, -=62, .=63).
-   The 40-character Base64 payload is strictly case-sensitive.
+   The 48-character Base64 payload is strictly case-sensitive. The keys
+   `whostyle` or `X-Whostyle` used in headers and tags are case-insensitive.
 
 3.2. Version Extensibility
 
@@ -224,20 +228,21 @@ Copyright Notice
 
 4.  Configuration Bitpacking (Radixes)
 
-   The first 8 Base64 characters encode an integer that represents the 
-   stylistic configuration. The encoding uses a little-endian byte order: 
-   the least significant digit is stored first (leftmost character), and 
-   the most significant digit is stored last (rightmost character).
+   To ensure safe decoding across all architectures, including constrained 
+   32-bit systems, the Configuration state is split into two independent 
+   integer blocks (Group A and Group B), each encoded into 4 Base64 
+   characters. 
 
-   The integer is constructed by sequentially packing properties using 
-   mixed-radix (variable-base) arithmetic, in the strict order defined 
-   below. This order is normative and MUST NOT be altered.
+   The integer for each group is constructed by sequentially packing 
+   properties using mixed-radix (variable-base) arithmetic, in the strict 
+   order defined below. This order is normative and MUST NOT be altered.
+   The encoding uses a little-endian byte order: the least significant 
+   digit is stored first (leftmost character), and the most significant 
+   digit is stored last (rightmost character).
 
 4.1. Radix Definitions and Encoding Order
 
-   Properties MUST be packed in the following order (first property is 
-   least significant, last property is most significant):
-
+   Group A (Properties 0-6):
    Index   Property         Radix   Range   Description
    -----   --------         -----   -----   -----------
    0       typography       28      0-27    Font stack index (Appendix C)
@@ -246,54 +251,64 @@ Copyright Notice
    3       list             5       0-4     List style type (Appendix D.3)
    4       border_style     10      0-9     Border style (Appendix D.4)
    5       bg_texture       32      0-31    Background texture (Appendix D.5)
-   6       border_width     7       0-6     Border width in px (direct)
+   6       border_width     17      0-16    Border width in px (direct)
+
+   Group B (Properties 7-14):
+   Index   Property         Radix   Range   Description
+   -----   --------         -----   -----   -----------
    7       border_radius    17      0-16    Border radius in px (direct)
    8       shadow_offset    9       0-8     Shadow offset (see §4.2)
    9       shadow_blur      9       0-8     Shadow blur in px (direct)
    10      letter_spacing   26      0-25    Letter spacing (see §4.2)
    11      texture_opacity  4       0-3     Texture opacity (see §4.2)
    12      shadow_opacity   4       0-3     Shadow opacity (see §4.2)
-   13      checksum         6       0-5     Data integrity check (see §4.4)
+   13      texture_size     4       0-3     Texture scale (see §4.2)
+   14      checksum         6       0-5     Data integrity check (see §4.4)
 
    Encoding Pseudocode (pack):
-   value = 0
-   // Iterate properties in REVERSE order (last to first):
-   for key in [checksum, shadow_opacity, texture_opacity, letter_spacing, shadow_blur, 
-               shadow_offset, border_radius, border_width, bg_texture,
-               border_style, list, align, transform, typography]:
-       value = value * RADIX[key] + config[key]
+   // Group A
+   valueA = 0
+   for key in [border_width, bg_texture, border_style, list, align, transform, typography]:
+       valueA = valueA * RADIX[key] + config[key]
+   for i in 0 to 3:
+       outputA[i] = ALPHABET[valueA % 64]
+       valueA = floor(valueA / 64)
 
-   // Encode to 8 Base64 characters (little-endian):
-   for i in 0 to 7 (inclusive, 8 iterations):
-       output[i] = ALPHABET[value % 64]
-       value = floor(value / 64)
+   // Group B
+   valueB = 0
+   for key in [checksum, texture_size, shadow_opacity, texture_opacity, letter_spacing, shadow_blur, shadow_offset, border_radius]:
+       valueB = valueB * RADIX[key] + config[key]
+   for i in 0 to 3:
+       outputB[i] = ALPHABET[valueB % 64]
+       valueB = floor(valueB / 64)
 
    Decoding Pseudocode (unpack):
-   // Decode from 8 Base64 characters (little-endian):
-   value = 0
+   // Group A (first 4 characters)
+   valueA = 0
    multiplier = 1
-   for i in 0 to 7 (inclusive, 8 iterations):
-       value = value + ALPHABET_INDEX[input[i]] * multiplier
+   for i in 0 to 3:
+       valueA = valueA + ALPHABET_INDEX[inputA[i]] * multiplier
        multiplier = multiplier * 64
+   for key in [typography, transform, align, list, border_style, bg_texture, border_width]:
+       config[key] = valueA % RADIX[key]
+       valueA = floor(valueA / RADIX[key])
+   if valueA != 0: reject("Group A invalid")
 
-   // Extract properties in FORWARD order (first to last):
-   for key in [typography, transform, align, list, border_style,
-               bg_texture, border_width, border_radius, 
-               shadow_offset, shadow_blur, letter_spacing,
-               texture_opacity, shadow_opacity, checksum]:
-       config[key] = value % RADIX[key]
-       value = floor(value / RADIX[key])
+   // Group B (next 4 characters)
+   valueB = 0
+   multiplier = 1
+   for i in 0 to 3:
+       valueB = valueB + ALPHABET_INDEX[inputB[i]] * multiplier
+       multiplier = multiplier * 64
+   for key in [border_radius, shadow_offset, shadow_blur, letter_spacing, texture_opacity, shadow_opacity, texture_size, checksum]:
+       config[key] = valueB % RADIX[key]
+       valueB = floor(valueB / RADIX[key])
+   if valueB != 0: reject("Group B invalid")
 
-   The maximum theoretical integer state is exactly 17,245,451,059,200 
-   (~17.2 trillion), which fits comfortably within standard 64-bit integer 
-   limits and within JavaScript's Number.MAX_SAFE_INTEGER (9 quadrillion). 
-   This state space requires 8 Base64 characters (which can store up to 
-   281.4 trillion).
-
-   After all properties are extracted via modulo arithmetic, the remaining 
-   `value` (residue) MUST be exactly `0`. If `value != 0`, the hash is 
-   structurally invalid and MUST be rejected. This ensures bijective 
-   integrity (preventing multiple hashes from decoding to the same style).
+   The maximum integer state for Group A is 12,185,600 (24 bits) and for 
+   Group B is 13,747,968 (24 bits). Both states comfortably fit inside 
+   the 16,777,215 (24-bit) limit provided by their respective 4-character 
+   Base64 blocks, preventing INT32 overflows in legacy software.
 
 4.2. Numeric Property Conversion Formulas
 
@@ -309,10 +324,13 @@ Copyright Notice
    shadow_blur       value + "px"         0px to 8px
    letter_spacing    (value × 0.1 - 0.5)  -0.5px to 2.0px
                      + "px" (1 decimal)
-   texture_opacity   [1.0, 0.75, 0.5,     100% to 25% Opacity
-                      0.25][value]
-   shadow_opacity    [1.0, 0.75, 0.5,     100% to 25% Opacity
-                      0.25][value]
+   texture_opacity:
+   0: 0.0, 1: 0.25, 2: 0.50, 3: 0.75
+   Host CSS formula: `opacity: var(--ws-topacity);` (applied to texture pseudo-element)
+
+   texture_size:
+   0: 8px, 1: 16px, 2: 24px, 3: 36px
+   Host CSS formula: `background-size: var(--ws-tsize) var(--ws-tsize);` (applied to textures that utilize scaling)
 
    Note on Shadow Offset: The shadow_offset value is applied to BOTH the 
    horizontal (X) and vertical (Y) offset of the CSS box-shadow property, 
@@ -380,16 +398,14 @@ Copyright Notice
    copy-pasting or character replacement), the 12th property packed into 
    the configuration integer is a Checksum.
    
-   The checksum is calculated as the weighted sum of the preceding 13 
-   properties, modulo 6:
-   
+   The checksum is calculated on the sender's side before base64 encoding 
+   Group B, using a weighted modulo-6 algorithm over all other 14 properties.
+
    Weights:
-   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-   
-   Properties (in calculation order):
-   ["typography", "transform", "align", "list", "border_style", 
-    "bg_texture", "border_width", "border_radius", "shadow_offset", 
-    "shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity"]
+   typography=1, transform=2, align=3, list=4, border_style=5, 
+   bg_texture=6, border_width=7, border_radius=8, shadow_offset=9, 
+   shadow_blur=10, letter_spacing=11, texture_opacity=12, shadow_opacity=13,
+   texture_size=14.
     
    Calculation Pseudocode:
    sum = 0
@@ -412,18 +428,24 @@ Copyright Notice
    "z-index", "margin", and "padding" are explicitly forbidden to ensure the 
    host platform retains absolute authority over document geometry.
 
-5.2.  Accessibility and Contrast Validation
+5.2. Minimum Contrast Validation (WCAG)
 
-   Prior to rendering, the host implementation SHOULD calculate the relative 
-   luminance contrast ratio between the "background" color and all foreground 
-   colors (text, accent, and effective texture color) in accordance with Web 
-   Content Accessibility Guidelines (WCAG) 2.1.
-   
-   The effective texture color MUST be calculated by applying alpha 
-   compositing over the background color, using the `texture_opacity` 
-   modifier, via the formula: 
-   R_effective = (R_texture * Alpha) + (R_background * (1 - Alpha)) 
-   (applied independently to the R, G, and B channels).
+   Host engines MUST compute the relative luminance contrast ratio between 
+   the background color and all foreground colors (text, accent/links).
+   For texture contrast, the host engine MUST compute the effective 
+   blended color of the texture overlaid on the background color, using 
+   standard alpha compositing based on the decoded `texture_opacity`. 
+
+   The contrast ratio MUST be evaluated against this effective blended 
+   color. If any of the following checks yield a ratio lower than 4.5:1, 
+   the host engine MUST reject the entire color scheme for that mode (Light 
+   or Dark) and fallback to its safe defaults.
+
+   Checks performed:
+   - Text vs Background
+   - Accent vs Background
+   - Text vs Effective Texture Color
+   - Accent vs Effective Texture Color
 
    If the computed contrast ratio is less than 4.5:1, the host engine MUST 
    override the colors to ensure legibility. In the event of a contrast 
@@ -431,16 +453,16 @@ Copyright Notice
    the following safe default standard:
    
    - Light Mode: Background #ffffff, Text #000000, Accent #0000ff, 
-                 Texture Color transparent
+                 Texture Color transparent, Border #cccccc
    - Dark Mode: Background #000000, Text #ffffff, Accent #00aaff, 
-                Texture Color transparent
+                Texture Color transparent, Border #555555
 
 6.  Security Considerations
 
    Whostyle V1 addresses major security concerns associated with arbitrary 
    CSS ingestion. By avoiding raw stylesheet parsing, libraries are 
    immune to CSS-based data exfiltration and blind injection attacks. 
-   The fixed 46-byte hash prevents bandwidth exhaustion.
+   The fixed 54-byte hash prevents bandwidth exhaustion.
 
    Regular Expression Denial of Service (ReDoS): Host engines must take 
    extreme care when parsing large, unbounded user-generated text for 
@@ -498,10 +520,10 @@ Appendix A: Normative Test Vector
    decode the following canonical Whostyle V1 hash:
 
    Input Hash:
-   {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}
+   {ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}
 
-   1. Configuration Block ("tP3ClmkB")
-      Decodes to State Integer: 6913371370477
+   1. Configuration Group A ("tPXG")
+      Decodes to State Integer: 310552
       
       Extracts to properties:
       - typography: 5
@@ -511,24 +533,32 @@ Appendix A: Normative Test Vector
       - border_style: 4
       - bg_texture: 10
       - border_width: 2
+
+   2. Configuration Group B ("AKCm")
+      Decodes to State Integer: 651664
+      
+      Extracts to properties:
       - border_radius: 8
       - shadow_offset: 3
       - shadow_blur: 5
       - letter_spacing: 12
       - texture_opacity: 2
       - shadow_opacity: 1
-      - checksum: 2
+      - texture_size: 1
+      - checksum: 4
 
-   2. Colors Block ("9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE")
-      Decodes to 8 RGB Colors:
+   3. Colors Block ("9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm")
+      Decodes to 10 RGB Colors:
       1. Light Background: "9fXw" -> #f5f5f0
       2. Light Text: "Ghou" -> #1a1a2e
       3. Light Accent: "AFXM" -> #0055cc
       4. Light Texture: "3d3d" -> #dddddd
-      5. Dark Background: "Ghou" -> #1a1a2e
-      6. Dark Text: "9fXw" -> #f5f5f0
-      7. Dark Accent: "Zqr." -> #66aaff
-      8. Dark Texture: "MzNE" -> #333344
+      5. Light Border: "zMzM" -> #cccccc
+      6. Dark Background: "Ghou" -> #1a1a2e
+      7. Dark Text: "9fXw" -> #f5f5f0
+      8. Dark Accent: "Zqr." -> #66aaff
+      9. Dark Texture: "MzNE" -> #333344
+      10. Dark Border: "VVVm" -> #555566
 
    WCAG Contrast Verification:
       Light Mode (bg #f5f5f0): text contrast 15.60:1, accent contrast 6.05:1
@@ -560,18 +590,22 @@ Appendix B: CSS Custom Properties and Class Names
    --ws-light-accent      colors          Light mode accent/link color
    --ws-light-texture     colors          Light mode texture fill color
    --ws-light-shadow      colors          Light mode shadow color (derived)
+   --ws-light-border      colors          Light mode border color
    --ws-dark-bg           colors          Dark mode background
    --ws-dark-text         colors          Dark mode text color
    --ws-dark-accent       colors          Dark mode accent/link color
    --ws-dark-texture      colors          Dark mode texture fill color
    --ws-dark-shadow       colors          Dark mode shadow color (derived)
+   --ws-dark-border       colors          Dark mode border color
+   --ws-tsize             config          Texture background-size
 
    B.2. CSS Class Names (set via class attribute)
 
    Class Name                     Description
    ----------                     -----------
    whostyle-container             Primary styling hook; activates the 
-                                  reference stylesheet rules.
+                                  reference stylesheet rules. MUST apply
+                                  `box-sizing: border-box`.
    whostyle-rendered              Processing marker; indicates that 
                                   Whostyle attributes have been applied 
                                   to this element.
@@ -672,34 +706,34 @@ Appendix D: Enum Property Lookup Tables
    Index  Class Suffix           Description
    -----  ------------           -----------
    0      none                   Solid color (no pattern)
-   1      noise                  Approximated static noise
+   1      weave                  Gingham weave pattern
    2      stripes-v              Vertical stripes
    3      stripes-h              Horizontal stripes
    4      stripes-d-right        Right diagonal stripes (45°)
    5      stripes-d-left         Left diagonal stripes (-45°)
-   6      pinstripes             Thin vertical pinstripes
-   7      wavy-lines             Sine-wave approximation lines
-   8      zigzag-lines           Zigzag lines
-   9      grid-standard          Basic square grid (20px)
-   10     grid-fine              Fine millimeter grid (5px)
-   11     grid-isometric         Isometric triangular grid
-   12     crosses                Crosses / registration marks
-   13     crosshatch             Crosshatch pattern (45°/-45°)
-   14     checkerboard           Traditional checkerboard
-   15     checkerboard-tilt      45° tilted checkerboard
-   16     triangles              Interlocking triangles
-   17     diamonds               Adjacent diamonds
-   18     argyle                 Overlapping diamonds with lines
-   19     honeycomb              Honeycomb-style hexagons
-   20     chevron                Thick zigzag pattern
-   21     houndstooth            Pied-de-poule pattern
-   22     brick-wall             Brick wall pattern
-   23     dots-sparse            Spaced dotted pattern
-   24     polka-dots             Large polka dots
-   25     circles-concentric     Concentric circles
-   26     scallop                Overlapping circles / fish scales
-   27     waves                  Cut concentric wave pattern
-   28     woven                  Rustic woven fabric texture
-   29     denim                  Diagonal weave texture
-   30     tartan                 Translucent plaid pattern
-   31     confetti               Scattered radial blocks
+   6      fine-grain             Multi-angled fine linear grain
+   7      zigzag-lines           Zigzag lines
+   8      grid-standard          Basic square grid
+   9      grid-isometric         Isometric triangular grid
+   10     crosses                Crosses / registration marks
+   11     crosshatch             Crosshatch pattern (45°/-45°)
+   12     checkerboard           Traditional checkerboard
+   13     checkerboard-tilt      45° tilted checkerboard
+   14     triangles              Interlocking triangles
+   15     diamonds               Adjacent diamonds
+   16     argyle                 Overlapping diamonds with lines
+   17     honeycomb              Honeycomb-style hexagons
+   18     chevron                Thick zigzag pattern
+   19     houndstooth            Pied-de-poule pattern
+   20     brick-wall             Brick wall pattern
+   21     brick-dots             Dotted brick pattern
+   22     polka-dots             Large polka dots
+   23     circles-concentric     Concentric circles
+   24     scallop                Overlapping circles / fish scales
+   25     waves                  Cut concentric wave pattern
+   26     woven                  Rustic woven fabric texture
+   27     denim                  Diagonal weave texture
+   28     tartan                 Translucent plaid pattern
+   29     soft-dapple            Organic soft dapple radial pattern
+   30     confetti               Scattered radial blocks
+   31     reserved               (Reserved for future extension)

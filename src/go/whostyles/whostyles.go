@@ -21,19 +21,20 @@ var radixes = []struct {
 	{"list", 5},
 	{"border_style", 10},
 	{"bg_texture", 32},
-	{"border_width", 7},
+	{"border_width", 17},
 	{"border_radius", 17},
 	{"shadow_offset", 9},
 	{"shadow_blur", 9},
 	{"letter_spacing", 26},
 	{"texture_opacity", 4},
 	{"shadow_opacity", 4},
+	{"texture_size", 4},
 	{"checksum", 6},
 }
 
 var colorOrder = []string{
-	"light_bg", "light_text", "light_accent", "light_texture",
-	"dark_bg", "dark_text", "dark_accent", "dark_texture",
+	"light_bg", "light_text", "light_accent", "light_texture", "light_border",
+	"dark_bg", "dark_text", "dark_accent", "dark_texture", "dark_border",
 }
 
 type Config map[string]uint64
@@ -100,11 +101,11 @@ func encodeColor(hexStr string) (string, error) {
 }
 
 func CalculateChecksum(config Config) uint64 {
-	weights := []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
+	weights := []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
 	props := []string{
 		"typography", "transform", "align", "list", "border_style",
 		"bg_texture", "border_width", "border_radius", "shadow_offset",
-		"shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity",
+		"shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity", "texture_size",
 	}
 	var sum uint64 = 0
 	for i, prop := range props {
@@ -118,27 +119,45 @@ func CalculateChecksum(config Config) uint64 {
 }
 
 func Decode(hashStr string) (*Decoded, error) {
-	pattern := regexp.MustCompile(`^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$`)
+	pattern := regexp.MustCompile(`^\{ws1:([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{40})\}$`)
 	matches := pattern.FindStringSubmatch(hashStr)
 	if matches == nil {
 		return nil, errors.New("invalid hash format")
 	}
 
-	configB64 := matches[1]
-	colorsB64 := matches[2]
+	configB64A := matches[1]
+	configB64B := matches[2]
+	colorsB64 := matches[3]
 
-	value, err := decodeBase64(configB64)
+	config := make(Config)
+
+	valueA, err := decodeBase64(configB64A)
 	if err != nil {
 		return nil, err
 	}
-
-	config := make(Config)
-	for _, radix := range radixes {
-		config[radix.Key] = value % radix.Value
-		value /= radix.Value
+	
+	groupAProps := []string{"typography", "transform", "align", "list", "border_style", "bg_texture", "border_width"}
+	for _, key := range groupAProps {
+		rad := getRadixValue(key)
+		config[key] = valueA % rad
+		valueA /= rad
+	}
+	if valueA != 0 {
+		return nil, errors.New("structurally invalid (residue must be 0)")
 	}
 
-	if value != 0 {
+	valueB, err := decodeBase64(configB64B)
+	if err != nil {
+		return nil, err
+	}
+	
+	groupBProps := []string{"border_radius", "shadow_offset", "shadow_blur", "letter_spacing", "texture_opacity", "shadow_opacity", "texture_size", "checksum"}
+	for _, key := range groupBProps {
+		rad := getRadixValue(key)
+		config[key] = valueB % rad
+		valueB /= rad
+	}
+	if valueB != 0 {
 		return nil, errors.New("structurally invalid (residue must be 0)")
 	}
 
@@ -177,15 +196,19 @@ func Encode(config Config, colors Colors) (string, error) {
 
 	config["checksum"] = CalculateChecksum(config)
 
-	var value uint64 = 0
-	// Pack config in reverse order
-	for i := len(radixes) - 1; i >= 0; i-- {
-		radix := radixes[i]
-		val := config[radix.Key]
-		value = value*radix.Value + val
+	var valueA uint64 = 0
+	groupAProps := []string{"border_width", "bg_texture", "border_style", "list", "align", "transform", "typography"}
+	for _, key := range groupAProps {
+		valueA = valueA*getRadixValue(key) + config[key]
 	}
+	configB64A := encodeBase64(valueA, 4)
 
-	configB64 := encodeBase64(value, 8)
+	var valueB uint64 = 0
+	groupBProps := []string{"checksum", "texture_size", "shadow_opacity", "texture_opacity", "letter_spacing", "shadow_blur", "shadow_offset", "border_radius"}
+	for _, key := range groupBProps {
+		valueB = valueB*getRadixValue(key) + config[key]
+	}
+	configB64B := encodeBase64(valueB, 4)
 
 	colorsB64 := ""
 	for _, key := range colorOrder {
@@ -200,14 +223,23 @@ func Encode(config Config, colors Colors) (string, error) {
 		colorsB64 += encodedC
 	}
 
-	return fmt.Sprintf("{ws1:%s%s}", configB64, colorsB64), nil
+	return fmt.Sprintf("{ws1:%s%s%s}", configB64A, configB64B, colorsB64), nil
+}
+
+func getRadixValue(key string) uint64 {
+	for _, r := range radixes {
+		if r.Key == key {
+			return r.Value
+		}
+	}
+	return 1
 }
 
 func ExtractFromHeaders(headers map[string][]string) string {
 	if headers == nil {
 		return ""
 	}
-	hashRegex := regexp.MustCompile(`^\{ws1:[A-Za-z0-9\-.]{40}\}$`)
+	hashRegex := regexp.MustCompile(`^\{ws1:[A-Za-z0-9\-.]{48}\}$`)
 	for k, v := range headers {
 		if strings.ToLower(k) == "x-whostyle" && len(v) > 0 {
 			val := strings.TrimSpace(v[0])
@@ -223,7 +255,7 @@ func ExtractFromTwtxt(feedString string) string {
 	if feedString == "" {
 		return ""
 	}
-	hashRegex := regexp.MustCompile(`(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$`)
+	hashRegex := regexp.MustCompile(`(?i)^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{48}\})\s*$`)
 	lines := strings.Split(feedString, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -240,19 +272,19 @@ func ExtractFromTwtxt(feedString string) string {
 
 func Extract(html string) string {
 	// 1. Meta Tag
-	reMeta := regexp.MustCompile(`(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{40}\})["']?`)
+	reMeta := regexp.MustCompile(`(?i)<meta[^>]+name=["']?whostyle["']?[^>]+content=["']?(\{ws1:[A-Za-z0-9\-.]{48}\})["']?`)
 	if m := reMeta.FindStringSubmatch(html); len(m) > 1 {
 		return m[1]
 	}
 
 	// 2. JSON-LD
-	reJSON := regexp.MustCompile(`(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"`)
+	reJSON := regexp.MustCompile(`(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{48}\})"`)
 	if m := reJSON.FindStringSubmatch(html); len(m) > 1 {
 		return m[1]
 	}
 
 	// 3. Inline
-	reInline := regexp.MustCompile(`(\{ws1:[A-Za-z0-9\-.]{40}\})`)
+	reInline := regexp.MustCompile(`(\{ws1:[A-Za-z0-9\-.]{48}\})`)
 	matches := reInline.FindAllStringSubmatchIndex(html, -1)
 	for _, match := range matches {
 		if match[0] > 0 && html[match[0]-1] == '\\' {
@@ -265,7 +297,7 @@ func Extract(html string) string {
 }
 
 func Clean(html string) string {
-	reClean := regexp.MustCompile(`(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})`)
+	reClean := regexp.MustCompile(`(?i)((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{48}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{48}\})|(\{ws1:[A-Za-z0-9\-.]{48}\})`)
 	return reClean.ReplaceAllStringFunc(html, func(match string) string {
 		submatches := reClean.FindStringSubmatch(match)
 		if len(submatches) > 1 && submatches[1] != "" {
@@ -312,13 +344,13 @@ var (
 		"andale-mono", "sf-mono", "cascadia-code",
 	}
 	Textures = []string{
-		"none", "noise", "stripes-v", "stripes-h", "stripes-d-right",
-		"stripes-d-left", "pinstripes", "wavy-lines", "zigzag-lines", "grid-standard",
-		"grid-fine", "grid-isometric", "crosses", "crosshatch", "checkerboard",
+		"none", "weave", "stripes-v", "stripes-h", "stripes-d-right",
+		"stripes-d-left", "fine-grain", "zigzag-lines", "grid-standard",
+		"grid-isometric", "crosses", "crosshatch", "checkerboard",
 		"checkerboard-tilt", "triangles", "diamonds", "argyle", "honeycomb",
-		"chevron", "houndstooth", "brick-wall", "dots-sparse", "polka-dots",
+		"chevron", "houndstooth", "brick-wall", "brick-dots", "polka-dots",
 		"circles-concentric", "scallop", "waves", "woven", "denim",
-		"tartan", "confetti",
+		"tartan", "soft-dapple", "confetti", "reserved",
 	}
 )
 
@@ -407,7 +439,7 @@ func GenerateAttributes(hash string) string {
 
 	bwidth := fmt.Sprintf("%dpx", config["border_width"])
 	bradius := fmt.Sprintf("%dpx", config["border_radius"])
-	soffset := fmt.Sprintf("%dpx", int64(config["shadow_offset"])-4)
+	soffset := fmt.Sprintf("%dpx", int64(config["shadow_offset"]))
 	sblur := fmt.Sprintf("%dpx", config["shadow_blur"])
 	lspacing := fmt.Sprintf("%.1fpx", float64(config["letter_spacing"])*0.1-0.5)
 
@@ -415,31 +447,32 @@ func GenerateAttributes(hash string) string {
 	lText := colors["light_text"]
 	lAccent := colors["light_accent"]
 	lTexture := colors["light_texture"]
+	lBorder := colors["light_border"]
 
-	if getContrast(lBg, lText) < 4.5 || getContrast(lBg, lAccent) < 4.5 {
+	if getContrast(lBg, lText) < 4.5 || getContrast(lBg, lAccent) < 4.5 || getContrast(lBg, HexToRgba(lTexture, config["texture_opacity"])) < 4.5 {
 		lBg = "#ffffff"
 		lText = "#000000"
 		lAccent = "#0000ff"
 		lTexture = "transparent"
+		lBorder = "#cccccc"
 	}
 
 	dBg := colors["dark_bg"]
 	dText := colors["dark_text"]
 	dAccent := colors["dark_accent"]
 	dTexture := colors["dark_texture"]
+	dBorder := colors["dark_border"]
 
-	if getContrast(dBg, dText) < 4.5 || getContrast(dBg, dAccent) < 4.5 {
+	if getContrast(dBg, dText) < 4.5 || getContrast(dBg, dAccent) < 4.5 || getContrast(dBg, HexToRgba(dTexture, config["texture_opacity"])) < 4.5 {
 		dBg = "#000000"
 		dText = "#ffffff"
 		dAccent = "#00aaff"
 		dTexture = "transparent"
+		dBorder = "#555555"
 	}
 
-	lTexture = HexToRgba(lTexture, config["texture_opacity"])
-	dTexture = HexToRgba(dTexture, config["texture_opacity"])
-
-	lShadow := HexToRgba(lAccent, config["shadow_opacity"])
-	dShadow := HexToRgba(dAccent, config["shadow_opacity"])
+	opacities := []string{"1.0", "0.75", "0.50", "0.25"}
+	tsizeMap := []string{"8px", "16px", "24px", "36px"}
 
 	styles := []string{
 		fmt.Sprintf("--ws-transform: %s", transform),
@@ -451,16 +484,21 @@ func GenerateAttributes(hash string) string {
 		fmt.Sprintf("--ws-soffset: %s", soffset),
 		fmt.Sprintf("--ws-sblur: %s", sblur),
 		fmt.Sprintf("--ws-lspacing: %s", lspacing),
+		fmt.Sprintf("--ws-topacity: %s", opacities[config["texture_opacity"]]),
+		fmt.Sprintf("--ws-sopacity: %s", opacities[config["shadow_opacity"]]),
+		fmt.Sprintf("--ws-tsize: %s", tsizeMap[config["texture_size"]]),
 		fmt.Sprintf("--ws-light-bg: %s", lBg),
 		fmt.Sprintf("--ws-light-text: %s", lText),
 		fmt.Sprintf("--ws-light-accent: %s", lAccent),
 		fmt.Sprintf("--ws-light-texture: %s", lTexture),
-		fmt.Sprintf("--ws-light-shadow: %s", lShadow),
+		fmt.Sprintf("--ws-light-border: %s", lBorder),
+		fmt.Sprintf("--ws-light-shadow: %s", HexToRgba(lText, config["shadow_opacity"])),
 		fmt.Sprintf("--ws-dark-bg: %s", dBg),
 		fmt.Sprintf("--ws-dark-text: %s", dText),
 		fmt.Sprintf("--ws-dark-accent: %s", dAccent),
 		fmt.Sprintf("--ws-dark-texture: %s", dTexture),
-		fmt.Sprintf("--ws-dark-shadow: %s", dShadow),
+		fmt.Sprintf("--ws-dark-border: %s", dBorder),
+		fmt.Sprintf("--ws-dark-shadow: %s", HexToRgba(dText, config["shadow_opacity"])),
 	}
 
 	return fmt.Sprintf(`class="%s" style="%s;"`, strings.Join(classNames, " "), strings.Join(styles, "; "))

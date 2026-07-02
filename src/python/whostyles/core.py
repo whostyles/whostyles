@@ -11,19 +11,20 @@ class Whostyles:
         'list': 5,
         'border_style': 10,
         'bg_texture': 32,
-        'border_width': 7,
+        'border_width': 17,
         'border_radius': 17,
         'shadow_offset': 9,
         'shadow_blur': 9,
         'letter_spacing': 26,
         'texture_opacity': 4,
         'shadow_opacity': 4,
+        'texture_size': 4,
         'checksum': 6
     }
     
     COLOR_ORDER = [
-        'light_bg', 'light_text', 'light_accent', 'light_texture',
-        'dark_bg', 'dark_text', 'dark_accent', 'dark_texture'
+        'light_bg', 'light_text', 'light_accent', 'light_texture', 'light_border',
+        'dark_bg', 'dark_text', 'dark_accent', 'dark_texture', 'dark_border'
     ]
 
     @classmethod
@@ -70,11 +71,11 @@ class Whostyles:
 
     @classmethod
     def calculate_checksum(cls, config: Dict[str, int]) -> int:
-        weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         props = [
             'typography', 'transform', 'align', 'list', 'border_style',
             'bg_texture', 'border_width', 'border_radius', 'shadow_offset',
-            'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity'
+            'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity', 'texture_size'
         ]
         s = 0
         for i, prop in enumerate(props):
@@ -83,25 +84,34 @@ class Whostyles:
 
     @classmethod
     def decode(cls, hash_str: str) -> Optional[Dict[str, Any]]:
-        match = re.match(r'^\{ws1:([A-Za-z0-9\-.]{8})([A-Za-z0-9\-.]{32})\}$', hash_str)
+        match = re.match(r'^\{ws1:([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{4})([A-Za-z0-9\-.]{40})\}$', hash_str)
         if not match:
             return None
         
-        config_b64 = match.group(1)
-        colors_b64 = match.group(2)
+        config_b64_a = match.group(1)
+        config_b64_b = match.group(2)
+        colors_b64 = match.group(3)
+        
+        config = {}
         
         try:
-            value = cls.decode_base64(config_b64)
+            value_a = cls.decode_base64(config_b64_a)
+            group_a_props = ['typography', 'transform', 'align', 'list', 'border_style', 'bg_texture', 'border_width']
+            for key in group_a_props:
+                radix = cls.RADIXES[key]
+                config[key] = value_a % radix
+                value_a //= radix
+            if value_a != 0: return None
+            
+            value_b = cls.decode_base64(config_b64_b)
+            group_b_props = ['border_radius', 'shadow_offset', 'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity', 'texture_size', 'checksum']
+            for key in group_b_props:
+                radix = cls.RADIXES[key]
+                config[key] = value_b % radix
+                value_b //= radix
+            if value_b != 0: return None
         except ValueError:
             return None
-            
-        config = {}
-        for key, radix in cls.RADIXES.items():
-            config[key] = value % radix
-            value //= radix
-            
-        if value != 0:
-            return None # Structurally invalid (residue must be 0)
             
         expected_checksum = cls.calculate_checksum(config)
         if config.get('checksum') != expected_checksum:
@@ -128,11 +138,17 @@ class Whostyles:
                 
         config['checksum'] = cls.calculate_checksum(config)
         
-        value = 0
-        for key in reversed(list(cls.RADIXES.keys())):
-            value = value * cls.RADIXES[key] + int(config.get(key, 0))
-            
-        config_b64 = cls.encode_base64(value, 8)
+        group_a_props = ['border_width', 'bg_texture', 'border_style', 'list', 'align', 'transform', 'typography']
+        value_a = 0
+        for key in group_a_props:
+            value_a = value_a * cls.RADIXES[key] + int(config.get(key, 0))
+        config_b64_a = cls.encode_base64(value_a, 4)
+        
+        group_b_props = ['checksum', 'texture_size', 'shadow_opacity', 'texture_opacity', 'letter_spacing', 'shadow_blur', 'shadow_offset', 'border_radius']
+        value_b = 0
+        for key in group_b_props:
+            value_b = value_b * cls.RADIXES[key] + int(config.get(key, 0))
+        config_b64_b = cls.encode_base64(value_b, 4)
         
         colors_b64 = ''
         for key in cls.COLOR_ORDER:
@@ -140,7 +156,7 @@ class Whostyles:
                 raise ValueError(f"Missing required color: {key}")
             colors_b64 += cls.encode_color(colors[key])
             
-        return f"{{ws1:{config_b64}{colors_b64}}}"
+        return f"{{ws1:{config_b64_a}{config_b64_b}{colors_b64}}}"
 
     @classmethod
     def extract_from_headers(cls, headers: Optional[Dict[str, str]] = None) -> Optional[str]:
@@ -149,7 +165,7 @@ class Whostyles:
         
         for k, val in headers.items():
             if k.lower() == 'x-whostyle':
-                if re.match(r'^\{ws1:[A-Za-z0-9\-.]{40}\}$', val):
+                if re.match(r'^\{ws1:[A-Za-z0-9\-.]{48}\}$', val):
                     return val.strip()
         return None
 
@@ -162,7 +178,7 @@ class Whostyles:
             if not line or line[0] != '#':
                 continue
             content = line[1:].lstrip()
-            m = re.match(r'^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{40}\})\s*$', content, re.IGNORECASE)
+            m = re.match(r'^whostyle\s*=\s*(\{ws1:[A-Za-z0-9\-.]{48}\})\s*$', content, re.IGNORECASE)
             if m:
                 return m.group(1)
         return None
@@ -173,15 +189,15 @@ class Whostyles:
             return None
             
         # 1. Meta
-        m = re.search(r'<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-.]{40}\})["\']?', html, re.IGNORECASE)
+        m = re.search(r'<meta[^>]+name=["\']?whostyle["\']?[^>]+content=["\']?(\{ws1:[A-Za-z0-9\-.]{48}\})["\']?', html, re.IGNORECASE)
         if m: return m.group(1)
 
         # 2. JSON-LD
-        m = re.search(r'"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{40}\})"', html, re.IGNORECASE)
+        m = re.search(r'"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-.]{48}\})"', html, re.IGNORECASE)
         if m: return m.group(1)
 
         # 3. Inline
-        for m in re.finditer(r'(\{ws1:[A-Za-z0-9\-.]{40}\})', html):
+        for m in re.finditer(r'(\{ws1:[A-Za-z0-9\-.]{48}\})', html):
             if m.start() > 0 and html[m.start() - 1] == '\\':
                 continue
             return m.group(1)
@@ -197,7 +213,7 @@ class Whostyles:
                 return match.group(2)
             return ''
             
-        pattern = re.compile(r'((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{40}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{40}\})|(\{ws1:[A-Za-z0-9\-.]{40}\})', re.IGNORECASE)
+        pattern = re.compile(r'((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["\']|&quot;|&#39;|&#039;)?whostyle(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["\']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-.]{48}\}(?:["\']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|\\(\{ws1:[A-Za-z0-9\-.]{48}\})|(\{ws1:[A-Za-z0-9\-.]{48}\})', re.IGNORECASE)
         return pattern.sub(repl, html)
 
     @classmethod
@@ -233,13 +249,13 @@ class Whostyles:
             'andale-mono', 'sf-mono', 'cascadia-code'
         ],
         'textures': [
-            'none', 'noise', 'stripes-v', 'stripes-h', 'stripes-d-right',
-            'stripes-d-left', 'pinstripes', 'wavy-lines', 'zigzag-lines', 'grid-standard',
-            'grid-fine', 'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
+            'none', 'weave', 'stripes-v', 'stripes-h', 'stripes-d-right',
+            'stripes-d-left', 'fine-grain', 'zigzag-lines', 'grid-standard',
+            'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
             'checkerboard-tilt', 'triangles', 'diamonds', 'argyle', 'honeycomb',
-            'chevron', 'houndstooth', 'brick-wall', 'dots-sparse', 'polka-dots',
+            'chevron', 'houndstooth', 'brick-wall', 'brick-dots', 'polka-dots',
             'circles-concentric', 'scallop', 'waves', 'woven', 'denim',
-            'tartan', 'confetti'
+            'tartan', 'soft-dapple', 'confetti', 'reserved'
         ]
     }
 
@@ -303,7 +319,7 @@ class Whostyles:
 
         bwidth = f"{config['border_width']}px"
         bradius = f"{config['border_radius']}px"
-        soffset = f"{config['shadow_offset'] - 4}px"
+        soffset = f"{config['shadow_offset']}px"
         sblur = f"{config['shadow_blur']}px"
         lspacing = f"{config['letter_spacing'] * 0.1 - 0.5:.1f}px"
 
@@ -311,29 +327,34 @@ class Whostyles:
         l_text = colors['light_text']
         l_accent = colors['light_accent']
         l_texture = colors['light_texture']
+        l_border = colors['light_border']
 
-        if cls._get_contrast(l_bg, l_text) < 4.5 or cls._get_contrast(l_bg, l_accent) < 4.5:
+        if cls._get_contrast(l_bg, l_text) < 4.5 or \
+           cls._get_contrast(l_bg, l_accent) < 4.5 or \
+           cls._get_contrast(l_bg, cls.hex_to_rgba(l_texture, config['texture_opacity'])) < 4.5:
             l_bg = '#ffffff'
             l_text = '#000000'
             l_accent = '#0000ff'
             l_texture = 'transparent'
+            l_border = '#cccccc'
 
         d_bg = colors['dark_bg']
         d_text = colors['dark_text']
         d_accent = colors['dark_accent']
         d_texture = colors['dark_texture']
+        d_border = colors['dark_border']
 
-        if cls._get_contrast(d_bg, d_text) < 4.5 or cls._get_contrast(d_bg, d_accent) < 4.5:
+        if cls._get_contrast(d_bg, d_text) < 4.5 or \
+           cls._get_contrast(d_bg, d_accent) < 4.5 or \
+           cls._get_contrast(d_bg, cls.hex_to_rgba(d_texture, config['texture_opacity'])) < 4.5:
             d_bg = '#000000'
             d_text = '#ffffff'
             d_accent = '#00aaff'
             d_texture = 'transparent'
-            
-        l_texture = cls.hex_to_rgba(l_texture, config['texture_opacity'])
-        d_texture = cls.hex_to_rgba(d_texture, config['texture_opacity'])
+            d_border = '#555555'
 
-        l_shadow = cls.hex_to_rgba(l_accent, config['shadow_opacity'])
-        d_shadow = cls.hex_to_rgba(d_accent, config['shadow_opacity'])
+        opacities = ['1.0', '0.75', '0.50', '0.25']
+        tsize_map = ['8px', '16px', '24px', '36px']
 
         styles = [
             f"--ws-transform: {transform}",
@@ -345,16 +366,21 @@ class Whostyles:
             f"--ws-soffset: {soffset}",
             f"--ws-sblur: {sblur}",
             f"--ws-lspacing: {lspacing}",
+            f"--ws-topacity: {opacities[config['texture_opacity']]}",
+            f"--ws-sopacity: {opacities[config['shadow_opacity']]}",
+            f"--ws-tsize: {tsize_map[config['texture_size']]}",
             f"--ws-light-bg: {l_bg}",
             f"--ws-light-text: {l_text}",
             f"--ws-light-accent: {l_accent}",
             f"--ws-light-texture: {l_texture}",
-            f"--ws-light-shadow: {l_shadow}",
+            f"--ws-light-border: {l_border}",
+            f"--ws-light-shadow: {cls.hex_to_rgba(l_text, config['shadow_opacity'])}",
             f"--ws-dark-bg: {d_bg}",
             f"--ws-dark-text: {d_text}",
             f"--ws-dark-accent: {d_accent}",
             f"--ws-dark-texture: {d_texture}",
-            f"--ws-dark-shadow: {d_shadow}"
+            f"--ws-dark-border: {d_border}",
+            f"--ws-dark-shadow: {cls.hex_to_rgba(d_text, config['shadow_opacity'])}"
         ]
 
         classes_str = ' '.join(class_names)

@@ -8,18 +8,20 @@
     --ws-light-text: #000000;
     --ws-light-accent: #0000ff;
     --ws-light-texture: transparent;
+    --ws-light-border: #cccccc;
     
     --ws-dark-bg: #000000;
     --ws-dark-text: #ffffff;
     --ws-dark-accent: #00aaff;
     --ws-dark-texture: transparent;
+    --ws-dark-border: #555555;
 }
 
 .whostyle-container {
     /* Auto-switching variables (Default to Light Mode) */
     --ws-bg: var(--ws-light-bg);
     --ws-text: var(--ws-light-text);
-    --ws-bcolor: var(--ws-light-accent);
+    --ws-bcolor: var(--ws-light-border);
     --ws-scolor: var(--ws-light-shadow);
     --ws-link: var(--ws-light-accent);
     --ws-texture: var(--ws-light-texture);
@@ -64,7 +66,7 @@
     .whostyle-container {
         --ws-bg: var(--ws-dark-bg);
         --ws-text: var(--ws-dark-text);
-        --ws-bcolor: var(--ws-dark-accent);
+        --ws-bcolor: var(--ws-dark-border);
         --ws-scolor: var(--ws-dark-shadow);
         --ws-link: var(--ws-dark-accent);
         --ws-texture: var(--ws-dark-texture);

@@ -128,37 +128,37 @@
         
         /* Texture classes to match V1 spec */
         .ws-texture-none { background-image: none; }
-        .ws-texture-noise { background-image: repeating-radial-gradient(circle at 17% 32%, var(--ws-texture), transparent 1px), repeating-radial-gradient(circle at 83% 68%, var(--ws-texture), transparent 1px); background-size: 8px 8px; }
-        .ws-texture-stripes-v { background-image: repeating-linear-gradient(to right, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
-        .ws-texture-stripes-h { background-image: repeating-linear-gradient(to bottom, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
-        .ws-texture-stripes-d-right { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
-        .ws-texture-stripes-d-left { background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 20px); }
-        .ws-texture-pinstripes { background-image: repeating-linear-gradient(to right, transparent, transparent 19px, var(--ws-texture) 19px, var(--ws-texture) 20px); }
-        .ws-texture-wavy-lines { background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 2px), radial-gradient(circle at 10px 30px, var(--ws-texture) 2px, transparent 2px); background-size: 20px 40px; background-position: 0 0, 10px 20px; }
-        .ws-texture-zigzag-lines { background: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%) -10px 0, linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%) -10px 0, linear-gradient(315deg, var(--ws-texture) 25%, transparent 25%), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%); background-size: 20px 20px; }
-        .ws-texture-grid-standard { background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: 20px 20px; }
-        .ws-texture-grid-fine { background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: 5px 5px; }
-        .ws-texture-grid-isometric { background-image: linear-gradient(30deg, var(--ws-texture) 1px, transparent 1px), linear-gradient(150deg, var(--ws-texture) 1px, transparent 1px); background-size: 20px 34px; }
-        .ws-texture-crosses { background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px), linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: 20px 20px, 20px 20px, 20px 20px; background-position: 10px 10px, 0 10px, 10px 0; }
+        .ws-texture-weave { background-image: repeating-radial-gradient(circle at 17% 32%, var(--ws-texture), transparent 1px), repeating-radial-gradient(circle at 83% 68%, var(--ws-texture), transparent 1px); background-size: var(--ws-tsize, 8px) var(--ws-tsize, 8px); }
+        .ws-texture-stripes-v { background-image: repeating-linear-gradient(to right, transparent, transparent calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) var(--ws-tsize, 8px)); }
+        .ws-texture-stripes-h { background-image: repeating-linear-gradient(to bottom, transparent, transparent calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) var(--ws-tsize, 8px)); }
+        .ws-texture-stripes-d-right { background-image: repeating-linear-gradient(45deg, transparent, transparent calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) var(--ws-tsize, 8px)); }
+        .ws-texture-stripes-d-left { background-image: repeating-linear-gradient(-45deg, transparent, transparent calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) calc(var(--ws-tsize, 8px) / 2), var(--ws-texture) var(--ws-tsize, 8px)); }
+        .ws-texture-fine-grain { background-image: repeating-linear-gradient(to right, transparent, transparent 19px, var(--ws-texture) 19px, var(--ws-texture) 20px); }
+        .ws-texture-zigzag-lines { background: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%) -10px 0, linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%) -10px 0, linear-gradient(315deg, var(--ws-texture) 25%, transparent 25%), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-grid-standard { background-image: linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-grid-isometric { background-image: linear-gradient(30deg, var(--ws-texture) 1px, transparent 1px), linear-gradient(150deg, var(--ws-texture) 1px, transparent 1px); background-size: var(--ws-tsize, 20px) calc(var(--ws-tsize, 20px) * 1.7); }
+        .ws-texture-crosses { background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px), linear-gradient(var(--ws-texture) 1px, transparent 1px), linear-gradient(90deg, var(--ws-texture) 1px, transparent 1px); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px), var(--ws-tsize, 20px) var(--ws-tsize, 20px), var(--ws-tsize, 20px) var(--ws-tsize, 20px); background-position: 10px 10px, 0 10px, 10px 0; }
         .ws-texture-crosshatch { background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, var(--ws-texture) 5px, var(--ws-texture) 6px), repeating-linear-gradient(-45deg, transparent, transparent 5px, var(--ws-texture) 5px, var(--ws-texture) 6px); }
-        .ws-texture-checkerboard { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
-        .ws-texture-checkerboard-tilt { background-image: repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-position: 0 0, 10px 10px; background-size: 28px 28px; }
-        .ws-texture-triangles { background-image: linear-gradient(45deg, var(--ws-texture) 50%, transparent 50%); background-size: 20px 20px; }
-        .ws-texture-diamonds { background-image: linear-gradient(45deg, transparent 25%, var(--ws-texture) 25%, var(--ws-texture) 50%, transparent 50%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: 20px 20px; }
+        .ws-texture-checkerboard { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); background-position: 0 0, calc(var(--ws-tsize, 20px) / 2) calc(var(--ws-tsize, 20px) / 2); }
+        .ws-texture-checkerboard-tilt { background-image: repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), repeating-linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-position: 0 0, 10px 10px; background-size: var(--ws-tsize, 28px) var(--ws-tsize, 28px); }
+        .ws-texture-triangles { background-image: linear-gradient(45deg, var(--ws-texture) 50%, transparent 50%); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-diamonds { background-image: linear-gradient(45deg, transparent 25%, var(--ws-texture) 25%, var(--ws-texture) 50%, transparent 50%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
         .ws-texture-argyle { background-image: repeating-linear-gradient(120deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 11px), repeating-linear-gradient(60deg, transparent, transparent 10px, var(--ws-texture) 10px, var(--ws-texture) 11px); }
-        .ws-texture-honeycomb { background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 3px); background-size: 20px 20px; }
-        .ws-texture-chevron { background-image: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%), linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%); background-size: 20px 20px; }
-        .ws-texture-houndstooth { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-position: 0 0, 10px 10px; background-size: 20px 20px; }
-        .ws-texture-brick-wall { background-image: linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px); background-size: 58px 58px; background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px; }
-        .ws-texture-dots-sparse { background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px); background-size: 20px 20px; }
-        .ws-texture-polka-dots { background-image: radial-gradient(circle, var(--ws-texture) 6px, transparent 6.5px); background-size: 30px 30px; }
+        .ws-texture-honeycomb { background-image: radial-gradient(circle at 10px 10px, var(--ws-texture) 2px, transparent 3px); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-chevron { background-image: linear-gradient(135deg, var(--ws-texture) 25%, transparent 25%), linear-gradient(225deg, var(--ws-texture) 25%, transparent 25%); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-houndstooth { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-position: 0 0, 10px 10px; background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-brick-wall { background-image: linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(335deg, var(--ws-texture) 23px, transparent 23px), linear-gradient(155deg, var(--ws-texture) 23px, transparent 23px); background-size: var(--ws-tsize, 58px) var(--ws-tsize, 58px); background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px; }
+        .ws-texture-brick-dots { background-image: radial-gradient(circle, var(--ws-texture) 2px, transparent 2.5px); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-polka-dots { background-image: radial-gradient(circle, var(--ws-texture) 6px, transparent 6.5px); background-size: var(--ws-tsize, 30px) var(--ws-tsize, 30px); }
         .ws-texture-circles-concentric { background-image: repeating-radial-gradient(circle, transparent, transparent 4px, var(--ws-texture) 4px, var(--ws-texture) 5px); }
-        .ws-texture-scallop { background-image: radial-gradient(circle at 100% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent), radial-gradient(circle at 0% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent); background-size: 40px 40px; background-position: 0 0, 20px 20px; }
-        .ws-texture-waves { background-image: radial-gradient(circle at 50% 100%, var(--ws-texture) 25%, transparent 26%); background-size: 20px 20px; }
-        .ws-texture-woven { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+        .ws-texture-scallop { background-image: radial-gradient(circle at 100% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent), radial-gradient(circle at 0% 50%, transparent 20%, var(--ws-texture) 21%, var(--ws-texture) 34%, transparent 35%, transparent); background-size: var(--ws-tsize, 40px) var(--ws-tsize, 40px); background-position: 0 0, calc(var(--ws-tsize, 40px) / 2) calc(var(--ws-tsize, 40px) / 2); }
+        .ws-texture-waves { background-image: radial-gradient(circle at 50% 100%, var(--ws-texture) 25%, transparent 26%); background-size: var(--ws-tsize, 20px) var(--ws-tsize, 20px); }
+        .ws-texture-woven { background-image: linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)), linear-gradient(45deg, var(--ws-texture) 25%, transparent 25%, transparent 75%, var(--ws-texture) 75%, var(--ws-texture)); background-size: var(--ws-tsize, 10px) var(--ws-tsize, 10px); background-position: 0 0, 5px 5px; }
         .ws-texture-denim { background-image: repeating-linear-gradient(45deg, transparent, transparent 1px, var(--ws-texture) 1px, var(--ws-texture) 2px), repeating-linear-gradient(-45deg, transparent, transparent 1px, var(--ws-texture) 1px, var(--ws-texture) 2px); background-size: 6px 6px; }
         .ws-texture-tartan { background-image: repeating-linear-gradient(0deg, transparent, transparent 20px, var(--ws-texture) 20px, var(--ws-texture) 22px), repeating-linear-gradient(90deg, transparent, transparent 20px, var(--ws-texture) 20px, var(--ws-texture) 22px); }
-        .ws-texture-confetti { background-image: radial-gradient(circle at 20% 30%, var(--ws-texture) 2px, transparent 2px), radial-gradient(circle at 80% 40%, var(--ws-texture) 3px, transparent 3px), radial-gradient(circle at 40% 80%, var(--ws-texture) 2px, transparent 2px); background-size: 30px 30px; }
+        .ws-texture-soft-dapple { background-image: radial-gradient(circle at 20% 30%, var(--ws-texture) 2px, transparent 2px), radial-gradient(circle at 80% 40%, var(--ws-texture) 3px, transparent 3px), radial-gradient(circle at 40% 80%, var(--ws-texture) 2px, transparent 2px); background-size: var(--ws-tsize, 30px) var(--ws-tsize, 30px); }
+        .ws-texture-confetti { background-image: radial-gradient(circle at 20% 30%, var(--ws-texture) 2px, transparent 2px), radial-gradient(circle at 80% 40%, var(--ws-texture) 3px, transparent 3px), radial-gradient(circle at 40% 80%, var(--ws-texture) 2px, transparent 2px); background-size: var(--ws-tsize, 30px) var(--ws-tsize, 30px); }
+        .ws-texture-reserved { background-image: none; }
 
         /* Comment previews */
         .comment-mock {
@@ -259,37 +259,46 @@
                             <label>Texture (32 Patterns)</label>
                             <select id="i_bg_texture">
                                 <option value="0">0: none</option>
-                                <option value="1">1: noise</option>
+                                <option value="1">1: weave</option>
                                 <option value="2">2: stripes-v</option>
                                 <option value="3">3: stripes-h</option>
                                 <option value="4">4: stripes-d-right</option>
                                 <option value="5">5: stripes-d-left</option>
-                                <option value="6">6: pinstripes</option>
-                                <option value="7">7: wavy-lines</option>
-                                <option value="8">8: zigzag-lines</option>
-                                <option value="9">9: grid-standard</option>
-                                <option value="10">10: grid-fine</option>
-                                <option value="11">11: grid-isometric</option>
-                                <option value="12">12: crosses</option>
-                                <option value="13">13: crosshatch</option>
-                                <option value="14">14: checkerboard</option>
-                                <option value="15">15: checkerboard-tilt</option>
-                                <option value="16">16: triangles</option>
-                                <option value="17">17: diamonds</option>
-                                <option value="18">18: argyle</option>
-                                <option value="19">19: honeycomb</option>
-                                <option value="20">20: chevron</option>
-                                <option value="21">21: houndstooth</option>
-                                <option value="22">22: brick-wall</option>
-                                <option value="23">23: dots-sparse</option>
-                                <option value="24">24: polka-dots</option>
-                                <option value="25">25: circles-concentric</option>
-                                <option value="26">26: scallop</option>
-                                <option value="27">27: waves</option>
-                                <option value="28">28: woven</option>
-                                <option value="29">29: denim</option>
-                                <option value="30">30: tartan</option>
-                                <option value="31">31: confetti</option>
+                                <option value="6">6: fine-grain</option>
+                                <option value="7">7: zigzag-lines</option>
+                                <option value="8">8: grid-standard</option>
+                                <option value="9">9: grid-isometric</option>
+                                <option value="10">10: crosses</option>
+                                <option value="11">11: crosshatch</option>
+                                <option value="12">12: checkerboard</option>
+                                <option value="13">13: checkerboard-tilt</option>
+                                <option value="14">14: triangles</option>
+                                <option value="15">15: diamonds</option>
+                                <option value="16">16: argyle</option>
+                                <option value="17">17: honeycomb</option>
+                                <option value="18">18: chevron</option>
+                                <option value="19">19: houndstooth</option>
+                                <option value="20">20: brick-wall</option>
+                                <option value="21">21: brick-dots</option>
+                                <option value="22">22: polka-dots</option>
+                                <option value="23">23: circles-concentric</option>
+                                <option value="24">24: scallop</option>
+                                <option value="25">25: waves</option>
+                                <option value="26">26: woven</option>
+                                <option value="27">27: denim</option>
+                                <option value="28">28: tartan</option>
+                                <option value="29">29: soft-dapple</option>
+                                <option value="30">30: confetti</option>
+                                <option value="31">31: reserved</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Texture Size</label>
+                            <select id="i_tsize">
+                                <option value="0">Small (8px)</option>
+                                <option value="1">Medium (16px)</option>
+                                <option value="2">Large (24px)</option>
+                                <option value="3">X-Large (36px)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -336,15 +345,15 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Border Width (0-6)</label>
-                            <input type="number" id="i_bwidth" value="0" min="0" max="6">
+                            <label>Border Width (0-16)</label>
+                            <input type="number" id="i_bwidth" value="0" min="0" max="16">
                         </div>
                         <div class="form-group">
                             <label>Border Radius (0-16)</label>
                             <input type="number" id="i_bradius" value="0" min="0" max="16">
                         </div>
                         <div class="form-group">
-                            <label>Shadow Offset (0-8, 4=center)</label>
+                            <label>Shadow Offset (0-8)</label>
                             <input type="number" id="i_soffset" value="4" min="0" max="8">
                         </div>
                         <div class="form-group">
@@ -405,11 +414,19 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Texture Color</label>
+                                <label>Texture Color <span id="ind_l_texture" class="c-ind"></span></label>
                                 <div class="color-controls">
                                     <input type="color" id="l_texture" value="#e2e8f0">
                                     <button class="btn-tool" onclick="adjustColor('l_texture', 5)" title="Lighten">☀</button>
                                     <button class="btn-tool" onclick="adjustColor('l_texture', -5)" title="Darken">🌙</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Border Color</label>
+                                <div class="color-controls">
+                                    <input type="color" id="l_border" value="#cccccc">
+                                    <button class="btn-tool" onclick="adjustColor('l_border', 5)" title="Lighten">☀</button>
+                                    <button class="btn-tool" onclick="adjustColor('l_border', -5)" title="Darken">🌙</button>
                                 </div>
                             </div>
                         </div>
@@ -442,11 +459,19 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>Texture Color</label>
+                                <label>Texture Color <span id="ind_d_texture" class="c-ind"></span></label>
                                 <div class="color-controls">
                                     <input type="color" id="d_texture" value="#334155">
                                     <button class="btn-tool" onclick="adjustColor('d_texture', 5)" title="Lighten">☀</button>
                                     <button class="btn-tool" onclick="adjustColor('d_texture', -5)" title="Darken">🌙</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Border Color</label>
+                                <div class="color-controls">
+                                    <input type="color" id="d_border" value="#555555">
+                                    <button class="btn-tool" onclick="adjustColor('d_border', 5)" title="Lighten">☀</button>
+                                    <button class="btn-tool" onclick="adjustColor('d_border', -5)" title="Darken">🌙</button>
                                 </div>
                             </div>
                         </div>
@@ -473,7 +498,7 @@
     <script>
         const WhostyleCore = {
             ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.',
-            RADIXES: { typography: 28, transform: 4, align: 4, list: 5, border_style: 10, bg_texture: 32, border_width: 7, border_radius: 17, shadow_offset: 9, shadow_blur: 9, letter_spacing: 26, texture_opacity: 4, shadow_opacity: 4, checksum: 6 },
+            RADIXES: { typography: 28, transform: 4, align: 4, list: 5, border_style: 10, bg_texture: 32, border_width: 17, border_radius: 17, shadow_offset: 9, shadow_blur: 9, letter_spacing: 26, texture_opacity: 4, shadow_opacity: 4, texture_size: 4, checksum: 6 },
             encodeBase64(value, length) {
                 let result = ''; let v = BigInt(value);
                 for (let i = 0; i < length; i++) { result += this.ALPHABET[Number(v % 64n)]; v = v / 64n; }
@@ -484,11 +509,11 @@
                 return this.ALPHABET[(val >> 18) & 63] + this.ALPHABET[(val >> 12) & 63] + this.ALPHABET[(val >> 6) & 63] + this.ALPHABET[val & 63];
             },
             calculateChecksum(config) {
-                const weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+                const weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
                 const props = [
                     'typography', 'transform', 'align', 'list', 'border_style',
                     'bg_texture', 'border_width', 'border_radius', 'shadow_offset',
-                    'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity'
+                    'shadow_blur', 'letter_spacing', 'texture_opacity', 'shadow_opacity', 'texture_size'
                 ];
                 let sum = 0;
                 for (let i = 0; i < props.length; i++) { sum += Number(config[props[i]]) * weights[i]; }
@@ -496,22 +521,29 @@
             },
             encode(config, colors) {
                 config.checksum = this.calculateChecksum(config);
-                let value = 0n;
-                const order = Object.keys(this.RADIXES).reverse();
-                for (const key of order) { value = value * BigInt(this.RADIXES[key]) + BigInt(config[key]); }
-                const configB64 = this.encodeBase64(value, 8);
-                const colorOrder = ['light_bg', 'light_text', 'light_accent', 'light_texture', 'dark_bg', 'dark_text', 'dark_accent', 'dark_texture'];
+
+                let valueA = 0n;
+                const groupA = ['border_width', 'bg_texture', 'border_style', 'list', 'align', 'transform', 'typography'];
+                for (const key of groupA) { valueA = valueA * BigInt(this.RADIXES[key]) + BigInt(config[key]); }
+                const configB64A = this.encodeBase64(valueA, 4);
+
+                let valueB = 0n;
+                const groupB = ['checksum', 'texture_size', 'shadow_opacity', 'texture_opacity', 'letter_spacing', 'shadow_blur', 'shadow_offset', 'border_radius'];
+                for (const key of groupB) { valueB = valueB * BigInt(this.RADIXES[key]) + BigInt(config[key]); }
+                const configB64B = this.encodeBase64(valueB, 4);
+
+                const colorOrder = ['light_bg', 'light_text', 'light_accent', 'light_texture', 'light_border', 'dark_bg', 'dark_text', 'dark_accent', 'dark_texture', 'dark_border'];
                 let colorsB64 = '';
                 for (const key of colorOrder) { colorsB64 += this.encodeColor(colors[key] || '#000000'); }
-                return `{ws1:${configB64}${colorsB64}}`;
+                return `{ws1:${configB64A}${configB64B}${colorsB64}}`;
             }
         };
 
         const inputs = [
             'i_typography', 'i_transform', 'i_align', 'i_list', 'i_bstyle', 'i_bg_texture',
-            'i_bwidth', 'i_bradius', 'i_soffset', 'i_sblur', 'i_lspacing', 'i_topacity', 'i_sopacity',
-            'l_bg', 'l_text', 'l_accent', 'l_texture',
-            'd_bg', 'd_text', 'd_accent', 'd_texture'
+            'i_bwidth', 'i_bradius', 'i_soffset', 'i_sblur', 'i_lspacing', 'i_topacity', 'i_sopacity', 'i_tsize',
+            'l_bg', 'l_text', 'l_accent', 'l_texture', 'l_border',
+            'd_bg', 'd_text', 'd_accent', 'd_texture', 'd_border'
         ];
 
         function getVal(id) { return document.getElementById(id).value; }
@@ -614,12 +646,12 @@
                 list: getNum('i_list'), border_style: getNum('i_bstyle'), bg_texture: getNum('i_bg_texture'),
                 border_width: getNum('i_bwidth'), border_radius: getNum('i_bradius'), shadow_offset: getNum('i_soffset'),
                 shadow_blur: getNum('i_sblur'), letter_spacing: getNum('i_lspacing'),
-                texture_opacity: getNum('i_topacity'), shadow_opacity: getNum('i_sopacity')
+                texture_opacity: getNum('i_topacity'), shadow_opacity: getNum('i_sopacity'), texture_size: getNum('i_tsize')
             };
 
             const colors = {
-                light_bg: getVal('l_bg'), light_text: getVal('l_text'), light_accent: getVal('l_accent'), light_texture: getVal('l_texture'),
-                dark_bg: getVal('d_bg'), dark_text: getVal('d_text'), dark_accent: getVal('d_accent'), dark_texture: getVal('d_texture')
+                light_bg: getVal('l_bg'), light_text: getVal('l_text'), light_accent: getVal('l_accent'), light_texture: getVal('l_texture'), light_border: getVal('l_border'),
+                dark_bg: getVal('d_bg'), dark_text: getVal('d_text'), dark_accent: getVal('d_accent'), dark_texture: getVal('d_texture'), dark_border: getVal('d_border')
             };
 
             const transforms = ['none', 'capitalize', 'uppercase', 'lowercase'];
@@ -634,12 +666,15 @@
             root.style.setProperty('--ws-bstyle', borders[config.border_style]);
             root.style.setProperty('--ws-bwidth', config.border_width + 'px');
             root.style.setProperty('--ws-bradius', config.border_radius + 'px');
-            root.style.setProperty('--ws-soffset', (config.shadow_offset - 4) + 'px');
+            root.style.setProperty('--ws-soffset', (config.shadow_offset) + 'px');
             root.style.setProperty('--ws-sblur', config.shadow_blur + 'px');
             root.style.setProperty('--ws-lspacing', (config.letter_spacing * 0.1 - 0.5).toFixed(1) + 'px');
+            root.style.setProperty('--ws-tsize', ['8px', '16px', '24px', '36px'][config.texture_size]);
 
             let l_bg = colors.light_bg, l_text = colors.light_text, d_bg = colors.dark_bg, d_text = colors.dark_text;
             let l_accent = colors.light_accent, d_accent = colors.dark_accent;
+            let l_border = colors.light_border, d_border = colors.dark_border;
+            let l_texture = colors.light_texture, d_texture = colors.dark_texture;
             let showWarning = false; let contrastErrors = [];
 
             const setInd = (id, ratio) => { const el = document.getElementById(id); if (el) el.innerHTML = ratio >= 4.5 ? '✅' : '🔴'; };
@@ -656,14 +691,18 @@
             ratio = getContrastRatio(d_bg, d_accent); setInd('ind_d_accent', ratio);
             if (ratio < 4.5) { contrastErrors.push(`Accent vs Background (Dark): ${ratio.toFixed(2)}:1 <button class="btn-tool" style="display:inline-block; height:auto; padding:2px 8px; margin-left:10px; font-size: 0.8rem; line-height:1;" onclick="autoFixContrast('d_bg', 'd_accent')">Auto-fix</button>`); d_accent = d_text; showWarning = true; }
 
-            let textureAlpha = 1.0 - (config.texture_opacity * 0.25);
-            let effectiveLightTexture = getBlendedColor(colors.light_texture, l_bg, textureAlpha);
-            ratio = getContrastRatio(l_bg, effectiveLightTexture);
-            if (colors.light_texture !== 'transparent' && ratio < 4.5) { contrastErrors.push(`Texture vs Background (Light): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
+            let textureAlpha = [1.0, 0.75, 0.50, 0.25][config.texture_opacity];
+            let effectiveLightTexture = getBlendedColor(l_texture, l_bg, textureAlpha);
+            ratio = getContrastRatio(l_bg, effectiveLightTexture); setInd('ind_l_texture', ratio);
+            if (colors.light_texture !== 'transparent' && ratio < 4.5) { contrastErrors.push(`Texture vs Background (Light): ${ratio.toFixed(2)}:1 <button class="btn-tool" style="display:inline-block; height:auto; padding:2px 8px; margin-left:10px; font-size: 0.8rem; line-height:1;" onclick="autoFixContrast('l_bg', 'l_texture')">Auto-fix</button>`); l_texture = 'transparent'; showWarning = true; }
 
-            let effectiveDarkTexture = getBlendedColor(colors.dark_texture, d_bg, textureAlpha);
-            ratio = getContrastRatio(d_bg, effectiveDarkTexture);
-            if (colors.dark_texture !== 'transparent' && ratio < 4.5) { contrastErrors.push(`Texture vs Background (Dark): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
+            let effectiveDarkTexture = getBlendedColor(d_texture, d_bg, textureAlpha);
+            ratio = getContrastRatio(d_bg, effectiveDarkTexture); setInd('ind_d_texture', ratio);
+            if (colors.dark_texture !== 'transparent' && ratio < 4.5) { contrastErrors.push(`Texture vs Background (Dark): ${ratio.toFixed(2)}:1 <button class="btn-tool" style="display:inline-block; height:auto; padding:2px 8px; margin-left:10px; font-size: 0.8rem; line-height:1;" onclick="autoFixContrast('d_bg', 'd_texture')">Auto-fix</button>`); d_texture = 'transparent'; showWarning = true; }
+
+            if (showWarning) {
+                l_border = '#cccccc'; d_border = '#555555';
+            }
 
             const warningDiv = document.getElementById('contrast_warning');
             if (showWarning) {
@@ -674,16 +713,16 @@
             // Theme Light
             root.style.setProperty('--ws-bg-light', l_bg);
             root.style.setProperty('--ws-text-light', l_text);
-            root.style.setProperty('--ws-bcolor-light', l_accent);
+            root.style.setProperty('--ws-bcolor-light', l_border);
             root.style.setProperty('--ws-link-light', l_accent);
-            root.style.setProperty('--ws-texture-light', colors.light_texture);
+            root.style.setProperty('--ws-texture-light', l_texture);
 
             // Theme Dark
             root.style.setProperty('--ws-bg-dark', d_bg);
             root.style.setProperty('--ws-text-dark', d_text);
-            root.style.setProperty('--ws-bcolor-dark', d_accent);
+            root.style.setProperty('--ws-bcolor-dark', d_border);
             root.style.setProperty('--ws-link-dark', d_accent);
-            root.style.setProperty('--ws-texture-dark', colors.dark_texture);
+            root.style.setProperty('--ws-texture-dark', d_texture);
 
             // Set classes
             const typographyNames = [
@@ -696,13 +735,13 @@
             ];
 
             const textureNames = [
-                'none', 'noise', 'stripes-v', 'stripes-h', 'stripes-d-right',
-                'stripes-d-left', 'pinstripes', 'wavy-lines', 'zigzag-lines', 'grid-standard',
-                'grid-fine', 'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
+                'none', 'weave', 'stripes-v', 'stripes-h', 'stripes-d-right',
+                'stripes-d-left', 'fine-grain', 'zigzag-lines', 'grid-standard',
+                'grid-isometric', 'crosses', 'crosshatch', 'checkerboard',
                 'checkerboard-tilt', 'triangles', 'diamonds', 'argyle', 'honeycomb',
-                'chevron', 'houndstooth', 'brick-wall', 'dots-sparse', 'polka-dots',
+                'chevron', 'houndstooth', 'brick-wall', 'brick-dots', 'polka-dots',
                 'circles-concentric', 'scallop', 'waves', 'woven', 'denim',
-                'tartan', 'confetti'
+                'tartan', 'soft-dapple', 'confetti', 'reserved'
             ];
 
             ['preview_light', 'preview_dark'].forEach(id => {
