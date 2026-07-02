@@ -13,7 +13,7 @@ Abstract
    format for syndicating personal typographic and cosmetic styles 
    across decentralized web platforms (e.g., the IndieWeb, Fediverse).
    By constraining user-defined styles to a strict subset of design 
-   tokens encoded via mathematical bitpacking into a 46-byte Base64 hash, 
+   tokens encoded via mathematical bitpacking into a 54-byte Base64 hash, 
    this specification enables host platforms to render third-party 
    syndicated content while guaranteeing layout integrity, performance, 
    accessibility, and mitigation of CSS injection vulnerabilities.

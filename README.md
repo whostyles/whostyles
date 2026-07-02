@@ -2,7 +2,7 @@
 
 An open, structured, data-driven format for syndicating personal typographic and cosmetic styles across decentralized web platforms (IndieWeb, Fediverse) without compromising host security, performance, or layout integrity.
 
-Whostyle V1 completely abandons JSON in favor of an ultra-compact Base64 Bitpacked Hash (`{ws1:...}`), dramatically reducing network payload to just 46 bytes while maintaining ~179.6 billion possible styling states.
+Whostyle V1 completely abandons JSON in favor of an ultra-compact Base64 Bitpacked Hash (`{ws1:...}`), dramatically reducing network payload to just 54 bytes while maintaining ~179.6 billion possible styling states.
 
 ## The Problem with Raw CSS Syndication
 
@@ -20,7 +20,7 @@ Whostyle abstracts cosmetic styling into non-executable design data tokens encod
 2. **Deterministic Constraints:** Numeric parameters (borders, shadows, spacing, texture opacity) are strictly bounded and clamped by the host engine.
 3. **Accessibility Enforcement:** Contrast ratios for text and links are strictly validated against WCAG minimums by the host.
 4. **Data Integrity Checksum:** The hash includes a mathematical modulo-6 checksum to prevent accidental configuration corruption during syndication.
-5. **Ultra-Compact Hash:** The entire configuration and color scheme are packed into a 46-character hash (`{ws1:...}`), allowing injection directly into HTTP Headers, meta tags, or text.
+5. **Ultra-Compact Hash:** The entire configuration and color scheme are packed into a 54-character hash (`{ws1:...}`), allowing injection directly into HTTP Headers, meta tags, or text.
 
 ### Base64 Alphabet Rationale
 
@@ -39,7 +39,7 @@ To protect document authors from malicious user-injected overrides (e.g., in com
 
 Additionally, for **twtxt** feeds, the hash can be syndicated via the [twtxt Metadata Extension](https://twtxt.dev/exts/metadata.html) using a dedicated `extractFromTwtxt()` method:
 ```
-# whostyle = {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}
+# whostyle = {ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}
 ```
 
 ---
@@ -55,7 +55,7 @@ require 'src/php/Whostyles.php';
 
 // Extract the headers if available (e.g. from getallheaders())
 $headers = [
-    'X-Whostyle' => '{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr.MzNE}'
+    'X-Whostyle' => '{ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}'
 ];
 
 // 1. Discover the Hash (Automatically handles precedence and decoding)
@@ -85,7 +85,7 @@ To make these variables work seamlessly, simply link our pre-compiled generic st
 ### Manual Hash Removal (Regex)
 If you are not using our libraries, you can clean the presentation layer manually by using the following Regular Expression (it targets inline hashes but explicitly protects the hash inside a `<meta>` tag):
 ```regex
-/((?:<|&lt;)meta[\s\S]*?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?content=(?:["']|&quot;|&#39;|&#039;)?{ws1:[A-Za-z0-9\-.]{40}}(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?(?:>|&gt;))|({ws1:[A-Za-z0-9\-.]{40}})/i
+/((?:<|&lt;)meta[\s\S]*?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?content=(?:["']|&quot;|&#39;|&#039;)?{ws1:[A-Za-z0-9\-.]{48}}(?:["']|&quot;|&#39;|&#039;)?[\s\S]*?(?:>|&gt;))|({ws1:[A-Za-z0-9\-.]{48}})/i
 ```
 Replace matching groups: if Group 1 matches, keep Group 1. If Group 2 matches, replace with an empty string.
 

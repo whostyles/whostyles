@@ -1,7 +1,7 @@
 import { WhostyleCore } from './src/js/whostyle-core.js';
 
-const html1 = `This is some text \\{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}`;
-const html2 = `This is some text {ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}`;
+const html1 = `This is some text \\{ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}`;
+const html2 = `This is some text {ws1:tPXGAKCm9fXwGhouAFXM3d3dzMzMGhou9fXwZqr.MzNEVVVm}`;
 
 console.log("HTML1 extraction: ", WhostyleCore.extract(html1));
 console.log("HTML2 extraction: ", WhostyleCore.extract(html2));
