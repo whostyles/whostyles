@@ -639,6 +639,12 @@
             ratio = getContrastRatio(d_bg, d_accent); setInd('ind_d_accent', ratio);
             if (ratio < 4.5) { contrastErrors.push(`Accent vs Background (Dark): ${ratio.toFixed(2)}:1 <button class="btn-tool" style="display:inline-block; height:auto; padding:2px 8px; margin-left:10px; font-size: 0.8rem; line-height:1;" onclick="autoFixContrast('d_bg', 'd_accent')">Auto-fix</button>`); d_accent = d_text; showWarning = true; }
 
+            ratio = getContrastRatio(l_bg, colors.light_texture);
+            if (colors.light_texture !== 'transparent' && ratio < 4.5 && config.texture_opacity < 2) { contrastErrors.push(`Texture vs Background (Light): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
+
+            ratio = getContrastRatio(d_bg, colors.dark_texture);
+            if (colors.dark_texture !== 'transparent' && ratio < 4.5 && config.texture_opacity < 2) { contrastErrors.push(`Texture vs Background (Dark): ${ratio.toFixed(2)}:1 (Consider making it higher contrast or lower opacity to avoid clashing).`); showWarning = true; }
+
             const warningDiv = document.getElementById('contrast_warning');
             if (showWarning) {
                 warningDiv.innerHTML = `<strong style="display:block;margin-bottom:0.5rem;">⚠️ Accessibility Warning: Contrast too low.</strong>` + contrastErrors.join('<br style="margin-bottom:0.5rem;">');

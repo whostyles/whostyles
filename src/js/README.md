@@ -13,7 +13,7 @@ npm install @whostyles/whostyles
 
 If you are processing Whostyles on the server, use only `WhostyleCore` to avoid issues with missing DOM objects (e.g., `window`, `document`).
 
-The easiest and safest way to process incoming syndicated content is using the `discover` macro. It automatically applies the strict V1 discovery hierarchy (HTTP Headers > Meta Tags > Link Tags > JSON-LD > Inline Text) and decodes the hash in one pass.
+The easiest and safest way to process incoming syndicated content is using the `discover` macro. It automatically applies the strict V1 discovery hierarchy (HTTP Headers > Meta Tags > JSON-LD > Inline Text) and decodes the hash in one pass.
 
 ```javascript
 import { WhostyleCore } from '@whostyles/whostyles';

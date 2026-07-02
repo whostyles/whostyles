@@ -57,9 +57,8 @@ Copyright Notice
 
    1. HTTP Response Headers (`X-Whostyle`)
    2. HTML `<meta>` tags
-   3. HTML `<link>` tags
-   4. JSON-LD scripts
-   5. Inline Text (Fallback)
+   3. JSON-LD scripts
+   4. Inline Text (Fallback)
 
    If a valid `{ws1:...}` hash is found at a higher precedence level, 
    the parser MUST immediately stop searching and apply that hash.
@@ -82,14 +81,8 @@ Copyright Notice
    Example representation in HTML:
    <meta name="whostyle" content="{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}">
 
-2.4. Link Tag Discovery (Level 3)
 
-   Authors MAY use a `<link>` tag with a data URI payload.
-
-   Example:
-   <link rel="whostyle" href="data:text/plain,{ws1:tP3ClmkB9fXwGhouAFXM3d3dGhou9fXwZqr_MzNE}">
-
-2.5. JSON-LD Discovery (Level 4)
+2.4. JSON-LD Discovery (Level 3)
 
    Authors syndicating structured data MAY embed the hash as a top-level 
    attribute within a JSON-LD block.
@@ -103,19 +96,23 @@ Copyright Notice
    }
    </script>
 
-2.6. Inline Text Discovery (Level 5 - Fallback)
+2.5. Inline Text Discovery (Level 4 - Fallback)
 
    If the author has no access to the `<head>` or HTTP headers (e.g., 
    posting a comment on a legacy platform), the hash MAY be placed 
    directly in the body text.
    
    Host engines MUST scan the raw text for the regex pattern: 
-   {ws1:[A-Za-z0-9\-_]{40}}
+   \{ws1:[A-Za-z0-9\-_]{40}\}
    
+   Inline Escape Sequence: If a backslash `\` precedes the hash (e.g., 
+   `\{ws1:...`), parsers MUST ignore it. This serves as an escape 
+   sequence to allow citing hashes in prose without activating them.
+
    Hash Collisions: If a document contains multiple inline hashes, the 
    parser MUST extract and apply only the first inline hash encountered.
 
-2.7. ActivityPub Profile Discovery (Fediverse)
+2.6. ActivityPub Profile Discovery (Fediverse)
 
    To syndicate styles across federated networks (such as Mastodon, Misskey, 
    or Pleroma) without requiring modifications to the backend server software, 
@@ -123,9 +120,11 @@ Copyright Notice
    
    Clients (e.g., alternative web interfaces, browser extensions, or mobile 
    apps) MUST inspect the author's PropertyValue attachments for a valid 
-   {ws1:...} hash.
+   \{ws1:...\} hash. If multiple `PropertyValue` attachments exist, the 
+   parser MUST select the first one where the `name` field (case-insensitive) 
+   equals `whostyle` or `Whostyle`.
 
-2.8. twtxt Feed Discovery
+2.7. twtxt Feed Discovery
 
    Authors publishing a twtxt feed [TWTXT] MAY broadcast their Whostyle
    hash using the Metadata extension [TWTXT-META]. The hash is embedded
@@ -135,7 +134,8 @@ Copyright Notice
    # whostyle = {ws1:CCCCCCCCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
 
    The field name "whostyle" is case-insensitive, as required by the
-   twtxt Metadata specification. Whitespace around the value MUST be
+   twtxt Metadata specification. The 40-character Base64 payload itself 
+   is strictly case-sensitive. Whitespace around the value MUST be
    stripped by the parser.
 
    Example twtxt feed header:
@@ -150,7 +150,7 @@ Copyright Notice
    extractFromTwtxt() method (or equivalent) rather than the HTML-based 
    discover() pipeline.
 
-2.9. Hash Extraction and Cleaning
+2.8. Hash Extraction and Cleaning
 
    Regardless of which hash is prioritized, the host engine SHOULD remove 
    all inline hashes from the presentation layer (the final HTML output) 
@@ -165,9 +165,11 @@ Copyright Notice
    Note: DOM traversal (if available in the host environment) is the 
    safest and preferred method for discovering the meta tag. The following 
    Regex should be used as a fallback for contexts without a DOM parser.
+   The 50,000 character limit recommendation (Section 6) applies equally 
+   to this HTML cleanup regex.
 
    Regex Pattern:
-   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?{ws1:[A-Za-z0-9\-_]{40}}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|({ws1:[A-Za-z0-9\-_]{40}})/i
+   /((?:<|&lt;)meta[\s\S]{0,250}?name=(?:["']|&quot;|&#39;|&#039;)?whostyle(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?content=(?:["']|&quot;|&#39;|&#039;)?\{ws1:[A-Za-z0-9\-_]{40}\}(?:["']|&quot;|&#39;|&#039;)?[\s\S]{0,250}?(?:>|&gt;))|(\{ws1:[A-Za-z0-9\-_]{40}\})/i
 
    Replacement Rule:
    If Group 1 matches, replace with Group 1 (preserve meta tag).
@@ -176,6 +178,11 @@ Copyright Notice
    Escaped Hashes: Parsers MUST search for the hash within the raw HTML 
    string before performing any entity unescaping. HTML-escaped hashes 
    (such as &#123;ws1:... or &lbrace;ws1:...) MUST NOT be extracted.
+
+   Markdown Interference: When extracting from text that will undergo 
+   Markdown processing, parsers SHOULD extract the hash before rendering, 
+   as the `_` character in the Base64 payload can be incorrectly 
+   interpreted as an emphasis delimiter.
 
 3.  Hash Specification
 
@@ -200,7 +207,7 @@ Copyright Notice
 
    The protocol prefix "{ws1:" explicitly identifies this specification 
    as Version 1. Future revisions of this protocol MUST use an incremented 
-   version prefix (e.g., "{ws3:", "{ws4:"). Parsers encountering a hash 
+   version prefix (e.g., "{ws2:", "{ws3:"). Parsers encountering a hash 
    with an unrecognized version prefix MUST silently ignore it and MUST NOT 
    attempt partial decoding. This ensures forward compatibility and allows 
    future versions to change the internal encoding without breaking 
@@ -247,16 +254,16 @@ Copyright Notice
                border_style, list, align, transform, typography]:
        value = value * RADIX[key] + config[key]
 
-   // Encode to 7 Base64 characters (little-endian):
-   for i in 0..7:
+   // Encode to 8 Base64 characters (little-endian):
+   for i in 0 to 7 (inclusive, 8 iterations):
        output[i] = ALPHABET[value % 64]
        value = floor(value / 64)
 
    Decoding Pseudocode (unpack):
-   // Decode from 7 Base64 characters (little-endian):
+   // Decode from 8 Base64 characters (little-endian):
    value = 0
    multiplier = 1
-   for i in 0..7:
+   for i in 0 to 7 (inclusive, 8 iterations):
        value = value + ALPHABET_INDEX[input[i]] * multiplier
        multiplier = multiplier * 64
 
@@ -268,12 +275,16 @@ Copyright Notice
        config[key] = value % RADIX[key]
        value = floor(value / RADIX[key])
 
-   The maximum theoretical integer state is approximately 179.6 billion, 
-   which fits within standard 64-bit integer limits (and within 
-   JavaScript's Number.MAX_SAFE_INTEGER of 2^53-1).
+   The maximum theoretical integer state is exactly 17,245,451,059,200 
+   (~17.2 trillion), which fits comfortably within standard 64-bit integer 
+   limits and within JavaScript's Number.MAX_SAFE_INTEGER (9 quadrillion). 
+   This state space requires 8 Base64 characters (which can store up to 
+   281.4 trillion).
 
-   Any residual integer value remaining after all properties have been 
-   decoded MUST be silently ignored by the parser.
+   After all properties are extracted via modulo arithmetic, the remaining 
+   `value` (residue) MUST be exactly `0`. If `value != 0`, the hash is 
+   structurally invalid and MUST be rejected. This ensures bijective 
+   integrity (preventing multiple hashes from decoding to the same style).
 
 4.2. Numeric Property Conversion Formulas
 
@@ -396,8 +407,8 @@ Copyright Notice
 
    Prior to rendering, the host implementation SHOULD calculate the relative 
    luminance contrast ratio between the "background" color and all foreground 
-   colors (text and accent) in accordance with Web Content Accessibility 
-   Guidelines (WCAG) 2.1.
+   colors (text, accent, and texture color) in accordance with Web Content 
+   Accessibility Guidelines (WCAG) 2.1.
 
    If the computed contrast ratio is less than 4.5:1, the host engine MUST 
    override the colors to ensure legibility. In the event of a contrast 

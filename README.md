@@ -30,9 +30,8 @@ To protect document authors from malicious user-injected overrides (e.g., in com
 
 1. **HTTP Headers:** `X-Whostyle` (Most secure)
 2. **HTML `<meta>` tag:** `<meta name="whostyle" content="...">`
-3. **HTML `<link>` tag:** `<link rel="whostyle" href="...">`
-4. **JSON-LD Script Data**
-5. **Inline Text (Fallback):** `{ws1:...}` injected anywhere in the body text
+3. **JSON-LD Script Data**
+4. **Inline Text (Fallback):** `{ws1:...}` injected anywhere in the body text (Note: prefix with `\` like `\{ws1:...` to escape the hash and prevent discovery).
 
 Additionally, for **twtxt** feeds, the hash can be syndicated via the [twtxt Metadata Extension](https://twtxt.dev/exts/metadata.html) using a dedicated `extractFromTwtxt()` method:
 ```

@@ -119,6 +119,10 @@ pub fn decode(hash_str: &str) -> Result<Decoded, String> {
         value /= radix;
     }
 
+    if value != 0 {
+        return Err("Structurally invalid (residue must be 0)".to_string());
+    }
+
     let expected_checksum = calculate_checksum(&config);
     if *config.get("checksum").unwrap_or(&0) != expected_checksum {
         return Err("Hash corrupted (checksum mismatch)".to_string());
@@ -204,20 +208,14 @@ pub fn extract(html: &str) -> Option<String> {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }
 
-    // 2. Link Tag
-    let re_link = Regex::new(r#"(?i)<link[^>]+rel=["']?whostyle["']?[^>]+href=["']?data:text/plain,(\{ws1:[A-Za-z0-9\-_]{40}\})["']?"#).unwrap();
-    if let Some(caps) = re_link.captures(html) {
-        return Some(caps.get(1).unwrap().as_str().to_string());
-    }
-
-    // 3. JSON-LD
+    // 2. JSON-LD
     let re_json = Regex::new(r#"(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})""#).unwrap();
     if let Some(caps) = re_json.captures(html) {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }
 
-    // 4. Inline
-    let re_inline = Regex::new(r#"(\{ws1:[A-Za-z0-9\-_]{40}\})"#).unwrap();
+    // 3. Inline
+    let re_inline = Regex::new(r#"(?:^|[^\\])(\{ws1:[A-Za-z0-9\-_]{40}\})"#).unwrap();
     if let Some(caps) = re_inline.captures(html) {
         return Some(caps.get(1).unwrap().as_str().to_string());
     }

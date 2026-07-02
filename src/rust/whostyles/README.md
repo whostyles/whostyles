@@ -12,7 +12,7 @@ cargo add whostyles
 
 ## Basic Usage
 
-The easiest and safest way to process incoming syndicated content is using the `discover` macro. It automatically applies the strict V1 discovery hierarchy (HTTP Headers > Meta Tags > Link Tags > JSON-LD > Inline Text) and decodes the hash in one pass.
+The easiest and safest way to process incoming syndicated content is using the `discover` macro. It automatically applies the strict V1 discovery hierarchy (HTTP Headers > Meta Tags > JSON-LD > Inline Text) and decodes the hash in one pass.
 
 ```rust
 use std::collections::HashMap;

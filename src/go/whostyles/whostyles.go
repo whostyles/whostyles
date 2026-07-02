@@ -118,7 +118,7 @@ func CalculateChecksum(config Config) uint64 {
 }
 
 func Decode(hashStr string) (*Decoded, error) {
-	pattern := regexp.MustCompile(`^{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})}$`)
+	pattern := regexp.MustCompile(`^\{ws1:([A-Za-z0-9\-_]{8})([A-Za-z0-9\-_]{32})\}$`)
 	matches := pattern.FindStringSubmatch(hashStr)
 	if matches == nil {
 		return nil, errors.New("invalid hash format")
@@ -136,6 +136,10 @@ func Decode(hashStr string) (*Decoded, error) {
 	for _, radix := range radixes {
 		config[radix.Key] = value % radix.Value
 		value /= radix.Value
+	}
+
+	if value != 0 {
+		return nil, errors.New("structurally invalid (residue must be 0)")
 	}
 
 	expectedChecksum := CalculateChecksum(config)
@@ -203,7 +207,7 @@ func ExtractFromHeaders(headers map[string][]string) string {
 	if headers == nil {
 		return ""
 	}
-	hashRegex := regexp.MustCompile(`^{ws1:[A-Za-z0-9\-_]{40}}$`)
+	hashRegex := regexp.MustCompile(`^\{ws1:[A-Za-z0-9\-_]{40}\}$`)
 	for k, v := range headers {
 		if strings.ToLower(k) == "x-whostyle" && len(v) > 0 {
 			val := strings.TrimSpace(v[0])
@@ -241,20 +245,14 @@ func Extract(html string) string {
 		return m[1]
 	}
 
-	// 2. Link Tag
-	reLink := regexp.MustCompile(`(?i)<link[^>]+rel=["']?whostyle["']?[^>]+href=["']?data:text/plain,(\{ws1:[A-Za-z0-9\-_]{40}\})["']?`)
-	if m := reLink.FindStringSubmatch(html); len(m) > 1 {
-		return m[1]
-	}
-
-	// 3. JSON-LD
+	// 2. JSON-LD
 	reJSON := regexp.MustCompile(`(?i)"whostyle"\s*:\s*"(\{ws1:[A-Za-z0-9\-_]{40}\})"`)
 	if m := reJSON.FindStringSubmatch(html); len(m) > 1 {
 		return m[1]
 	}
 
-	// 4. Inline
-	reInline := regexp.MustCompile(`(\{ws1:[A-Za-z0-9\-_]{40}\})`)
+	// 3. Inline
+	reInline := regexp.MustCompile(`(?:^|[^\\])(\{ws1:[A-Za-z0-9\-_]{40}\})`)
 	if m := reInline.FindStringSubmatch(html); len(m) > 1 {
 		return m[1]
 	}
