@@ -482,13 +482,40 @@
 
         <div class="panel">
             <h2>Output & Export</h2>
-            <div class="config-row">
-                <div class="output-section" style="grid-column: 1 / -1;">
-                    <h3>Meta Tag Hash <span class="recommended-badge">V1 Standard</span></h3>
+            <div class="config-row" style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div class="output-section">
+                    <h3>HTML Meta Tag <span class="recommended-badge">V1 Standard</span></h3>
                     <p class="instruction">Embed this inside your <code>&lt;head&gt;</code> to apply your identity via the Whostyle V1 protocol.</p>
                     <div class="json-output" id="meta_out"></div>
                     <div class="action-row">
                         <button class="btn secondary" id="btn_copy_meta">Copy Meta Tag</button>
+                    </div>
+                </div>
+
+                <div class="output-section">
+                    <h3>HTTP Header</h3>
+                    <p class="instruction">For maximum security, send the hash directly in your HTTP response headers.</p>
+                    <div class="json-output" id="header_out"></div>
+                    <div class="action-row">
+                        <button class="btn secondary" id="btn_copy_header">Copy Header</button>
+                    </div>
+                </div>
+
+                <div class="output-section">
+                    <h3>twtxt.txt Metadata</h3>
+                    <p class="instruction">For syndicating styles in a twtxt feed.</p>
+                    <div class="json-output" id="twtxt_out"></div>
+                    <div class="action-row">
+                        <button class="btn secondary" id="btn_copy_twtxt">Copy twtxt</button>
+                    </div>
+                </div>
+
+                <div class="output-section">
+                    <h3>Raw Hash</h3>
+                    <p class="instruction">The raw encoded payload block (useful for inline injections or custom implementations).</p>
+                    <div class="json-output" id="raw_out"></div>
+                    <div class="action-row">
+                        <button class="btn secondary" id="btn_copy_raw">Copy Hash</button>
                     </div>
                 </div>
             </div>
@@ -753,8 +780,17 @@
 
             // Update Hash
             const hash = WhostyleCore.encode(config, colors);
+            
             const metaTag = `<meta name="whostyle" content="${hash}">`;
             document.getElementById('meta_out').textContent = metaTag;
+            
+            const header = `X-Whostyle: ${hash}`;
+            document.getElementById('header_out').textContent = header;
+            
+            const twtxt = `# whostyle = ${hash}`;
+            document.getElementById('twtxt_out').textContent = twtxt;
+            
+            document.getElementById('raw_out').textContent = hash;
         }
 
         inputs.forEach(id => {
@@ -762,12 +798,19 @@
             if (el) { el.addEventListener('input', updatePreviewAndHash); el.addEventListener('change', updatePreviewAndHash); }
         });
 
-        document.getElementById('btn_copy_meta').addEventListener('click', () => {
-            navigator.clipboard.writeText(document.getElementById('meta_out').textContent);
-            const btn = document.getElementById('btn_copy_meta');
-            btn.textContent = "Copied!";
-            setTimeout(() => btn.textContent = "Copy Meta Tag", 2000);
-        });
+        function setupCopy(btnId, outId, defaultText) {
+            document.getElementById(btnId).addEventListener('click', () => {
+                navigator.clipboard.writeText(document.getElementById(outId).textContent);
+                const btn = document.getElementById(btnId);
+                btn.textContent = "Copied!";
+                setTimeout(() => btn.textContent = defaultText, 2000);
+            });
+        }
+
+        setupCopy('btn_copy_meta', 'meta_out', 'Copy Meta Tag');
+        setupCopy('btn_copy_header', 'header_out', 'Copy Header');
+        setupCopy('btn_copy_twtxt', 'twtxt_out', 'Copy twtxt');
+        setupCopy('btn_copy_raw', 'raw_out', 'Copy Hash');
 
         document.getElementById('btn_unpin').addEventListener('click', function() {
             const panel = document.querySelector('.sticky-panel');
