@@ -1,0 +1,7 @@
+codeberg_owner = whostyles
+codeberg_repo = whostyles
+backup_forge = github
+backup_owner = lumenpink
+backup_repo = whostyles
+agent_md_url = https://gist.githubusercontent.com/lumenpink/ebaded4f8bfb956346c28b64f48754fb/raw/c48a2f9cfb4fd73dcb944c4e47a5b17b8f3a3a2e/AGENTS.md
+agent_var_lang = english
