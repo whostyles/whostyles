@@ -1,4 +1,4 @@
 # GOSTVER — Declaração de Conformidade com o Padrão GOST
-GOST_VERSION="1.2.0"
+GOST_VERSION="1.4.0"
 GOST_PROFILE_URL=""
 GOST_LANGUAGES="php,javascript"
