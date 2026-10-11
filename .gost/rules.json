@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "GOST Compliance Rules",
+  "version": "1.0.0-draft",
+  "rules": [
+    {
+      "id": "GOST-01-LICENSE",
+      "section": 2,
+      "title": "Licença Declarada e Matriz de Licenciamento",
+      "severity": "MUST",
+      "check": "file_exists",
+      "target": "LICENSE",
+      "valid_values": [
+        "CC0-1.0",
+        "GPL-3.0",
+        "GPL-3.0-or-later",
+        "AGPL-3.0",
+        "Apache-2.0",
+        "CC-BY-SA-4.0",
+        "CC-BY-ND-4.0"
+      ],
+      "satellite_files": [
+        "LICENSE-MEDIA",
+        "LICENSE-LOGO",
+        "LICENSE-APACHE"
+      ]
+    },
+    {
+      "id": "GOST-02-ANATOMY-ROOT",
+      "section": 3,
+      "title": "Arquivos Básicos da Raiz",
+      "severity": "MUST",
+      "check": "files_exist",
+      "targets": ["README.md", "VERSION", "CHANGELOG.md", ".gitignore", ".editorconfig", "site/index.html", "site/_headers"]
+    },
+    {
+      "id": "GOST-03-VERSION-SEMVER",
+      "section": 4,
+      "title": "Arquivo VERSION SemVer 2.0.0",
+      "severity": "MUST",
+      "check": "semver_regex",
+      "target": "VERSION"
+    },
+    {
+      "id": "GOST-04-TICKETS-COMMITS",
+      "section": 5,
+      "title": "Rastreabilidade Estrita de Tickets nos Commits",
+      "severity": "MUST",
+      "check": "commit_msg_pattern",
+      "pattern": ".*\\((ref|closes|resolves|fixes) #[0-9]+\\)$"
+    },
+    {
+      "id": "GOST-05-BRANCH-PER-TICKET",
+      "section": 5,
+      "title": "Branches Dedicadas por Ticket",
+      "severity": "MUST",
+      "check": "branch_name_pattern",
+      "pattern": "^(feat|fix|docs|refactor|test|chore)/[0-9]+-[a-z0-9-]+$"
+    },
+    {
+      "id": "GOST-06-TEST-COVERAGE",
+      "section": 6,
+      "title": "Piso Mínimo de Cobertura de Testes (≥90%)",
+      "severity": "MUST",
+      "check": "coverage_min",
+      "threshold": 90
+    },
+    {
+      "id": "GOST-07-STATIC-ZERO-WARNINGS",
+      "section": 7,
+      "title": "Tolerância Zero a Avisos em Linters",
+      "severity": "MUST",
+      "check": "linter_exit_code",
+      "flag": "-D warnings"
+    },
+    {
+      "id": "GOST-08-FORMAT-DETERMINISTIC",
+      "section": 7,
+      "title": "Formatação Determinística Verificada",
+      "severity": "MUST",
+      "check": "format_check"
+    },
+    {
+      "id": "GOST-09-SITE-HEADERS",
+      "section": 8,
+      "title": "Cabeçalhos HTTP de Segurança na Vitrine",
+      "severity": "MUST",
+      "check": "file_contains",
+      "target": "site/_headers",
+      "required_strings": ["X-Content-Type-Options: nosniff", "X-Frame-Options: DENY"]
+    },
+    {
+      "id": "GOST-10-CI-SEPARATION",
+      "section": 9,
+      "title": "Separação de Jobs de Test e Deploy no CI",
+      "severity": "MUST",
+      "check": "ci_jobs_separated",
+      "required_jobs": ["test"]
+    },
+    {
+      "id": "GOST-11-INTL-10-LANGUAGES",
+      "section": 10,
+      "title": "Paridade das 10 Línguas Canônicas",
+      "severity": "MUST",
+      "check": "locales_parity",
+      "languages": ["en", "pt", "es", "fr", "de", "it", "ru", "zh", "ja", "ar"]
+    },
+    {
+      "id": "GOST-12-SOCIAL-SAFE-ZONE",
+      "section": 11,
+      "title": "Cards Sociais com Safe Zone 4:3",
+      "severity": "SHOULD",
+      "check": "image_dimensions",
+      "target": "site/assets/og_preview.png",
+      "width": 1200,
+      "height": 630
+    },
+    {
+      "id": "GOST-13-XDG-FALLBACKS",
+      "section": 13,
+      "title": "Conformidade XDG com Fallbacks Canônicos",
+      "severity": "MUST",
+      "check": "xdg_adherence"
+    },
+    {
+      "id": "GOST-14-CONFIG-PRECEDENCE",
+      "section": 13,
+      "title": "Hierarquia de Precedência de Configuração e Formato Plano",
+      "severity": "MUST",
+      "check": "config_precedence"
+    },
+    {
+      "id": "GOST-15-DOCKER-STANDARDS",
+      "section": 13,
+      "title": "Padrões OCI/Docker (Multi-stage, Non-root, Sem Latest)",
+      "severity": "MUST",
+      "check": "dockerfile_lint",
+      "conditions": ["multi_stage", "user_non_root", "no_latest_tag"]
+    },
+    {
+      "id": "GOST-16-GOSTVER-COMPLIANCE",
+      "section": 3,
+      "title": "Declaração de Versão e Perfil via GOSTVER",
+      "severity": "SHOULD",
+      "check": "file_exists",
+      "target": "GOSTVER"
+    },
+    {
+      "id": "GOST-17-LANGUAGE-SPECS",
+      "section": 14,
+      "title": "Adoção de Especificações Modulares por Linguagem",
+      "severity": "SHOULD",
+      "check": "language_spec_adherence",
+      "supported_languages": ["php", "rust", "shell", "javascript", "r"]
+    }
+  ]
+}
