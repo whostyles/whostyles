@@ -203,5 +203,12 @@ This project is a decentralized web standard proposal.
 
 The primary development, issue tracking, and specification design discussions occur sovereignly on **Codeberg**:
 👉 [https://codeberg.org/whostyles/whostyles](https://codeberg.org/whostyles/whostyles)
+## 📄 Licença
 
-License: Apache 2.0. Free software for a free, sovereign web.
+Este projeto é software livre e de código aberto distribuído sob a licença **Apache-2.0**:
+
+| Componente | Licença | Arquivo |
+| :--- | :--- | :--- |
+| **Código-Fonte e Core** | Apache-2.0 | [`LICENSE`](LICENSE) |
+| **Logotipos e Identidade** | CC-BY-ND-4.0 | [`LICENSE-LOGO`](LICENSE-LOGO) |
+| **Mídias e Ilustrações** | CC-BY-SA-4.0 | [`LICENSE-MEDIA`](LICENSE-MEDIA) |
